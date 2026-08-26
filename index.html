@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت</title>
+    <title>مولد ملصقات نجوم ماركت - A4</title>
     <!-- مكتبة قراءة الإكسل -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -112,17 +112,17 @@
             display: none;
         }
 
-        /* إعدادات الطباعة الدقيقة لمقاس 5سم × 3سم */
+        /* إعدادات طباعة صفحات A4 تحتوي كل صفحة على شبكة من التكتات بمقاس 7×5 سم */
         @media print {
             @page {
-                size: 5cm 3cm;
-                margin: 0;
+                size: A4 portrait;
+                margin: 10mm;
             }
             body, html {
                 margin: 0;
                 padding: 0;
-                width: 5cm;
-                height: 3cm;
+                width: 210mm;
+                height: 297mm;
             }
             body * {
                 visibility: hidden;
@@ -135,22 +135,34 @@
                 position: absolute;
                 top: 0;
                 right: 0;
-                width: 5cm;
+                width: 190mm;
             }
-            .ticket-page {
-                width: 5cm !important;
-                height: 3cm !important;
+            .a4-page {
+                width: 190mm;
+                height: 277mm;
                 page-break-after: always;
                 break-after: page;
+                display: grid;
+                grid-template-columns: repeat(2, 7cm); /* عمودين في العرض */
+                grid-template-rows: repeat(5, 5cm);    /* 5 صفوف في الارتفاع = 10 تكتات بالصفحة */
+                gap: 5mm 5mm;
+                align-content: start;
+                justify-content: start;
+                background: #fff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .ticket-box {
+                width: 7cm;
+                height: 5cm;
                 box-sizing: border-box;
                 overflow: hidden;
                 background: #fff;
+                border: 1px dashed #94a3b8; /* خط حدود خفيف للقص أو بدون حدود حسب الرغبة */
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-                padding: 1mm 2mm;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                padding: 3mm 4mm;
             }
         }
     </style>
@@ -158,14 +170,14 @@
 <body>
 
 <div class="container">
-    <h1>مولد ملصقات نجوم ماركت</h1>
+    <h1>مولد ملصقات نجوم ماركت (تعبئة صفحات A4)</h1>
     
     <div class="info-box">
         <strong>تعليمات الطباعة:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>ارفع ملف الإكسل.</li>
+            <li>ارفع ملف الإكسل (سيتم توزيع المنتجات تلقائياً على صفحات A4 بواقع 10 تكتات لكل صفحة).</li>
             <li>اضغط على <strong>"توليد الملصقات للطباعة / حفظ PDF"</strong>.</li>
-            <li>تأكد في خيارات المتصفح من جعل الهوامش <strong>(Margins: None)</strong> وإلغاء الرؤوس والتذييلات.</li>
+            <li>في إعدادات طابعة المتصفح، تأكد من جعل المقاس <strong>A4</strong> والهوامش <strong>(Margins: Default أو Minimum)</strong> وإلغاء الرؤوس والتذييلات.</li>
         </ol>
     </div>
 
@@ -177,11 +189,11 @@
     <div class="dimensions-grid">
         <div class="form-group">
             <label for="widthInput">عرض التكت (سم):</label>
-            <input type="number" id="widthInput" value="5" step="0.5" min="1">
+            <input type="number" id="widthInput" value="7" readonly style="background: #f1f5f9;">
         </div>
         <div class="form-group">
             <label for="heightInput">ارتفاع التكت (سم):</label>
-            <input type="number" id="heightInput" value="3" step="0.5" min="1">
+            <input type="number" id="heightInput" value="5" readonly style="background: #f1f5f9;">
         </div>
     </div>
 
@@ -229,7 +241,7 @@
         reader.readAsArrayBuffer(file);
     });
 
-    // دالة للبحث عن عمود "الوزن" وتحويله إلى لاتيني كامل
+    // دالة استخراج الوزن من عمود الوزن وتحويله للاتيني
     function getWeightFromColumn(row) {
         let weightRaw = '';
         for (let key in row) {
@@ -264,7 +276,7 @@
         return `${num}${unit}`;
     }
 
-    // دالة لتنظيف السعر واستخراج الرقم فقط
+    // تنظيف السعر
     function cleanPriceVal(val) {
         if (!val) return '';
         let cleaned = String(val).replace(/[^\d.,]/g, '').replace(',', '.');
@@ -272,7 +284,7 @@
         return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
     }
 
-    // دالة لحساب سعر الكيلو أو اللتر تلقائياً (النظام الألماني Grundpreis)
+    // حساب سعر الكيلو أو اللتر (Grundpreis)
     function calculateGrundpreis(priceStr, weightStr) {
         if (!priceStr || !weightStr) return '';
         
@@ -314,21 +326,20 @@
     generateBtn.addEventListener('click', () => {
         if (excelData.length === 0) return;
 
-        const widthCm = parseFloat(document.getElementById('widthInput').value) || 5;
-        const heightCm = parseFloat(document.getElementById('heightInput').value) || 3;
-        
-        const widthMm = widthCm * 10;
-        const heightMm = heightCm * 10;
-
         const printArea = document.getElementById('printArea');
         printArea.innerHTML = '';
 
+        const ticketsPerPage = 10; // 2 أعمدة × 5 صفوف في كل صفحة A4
+        let currentA4Page = null;
+
         excelData.forEach((row, index) => {
-            const pageDiv = document.createElement('div');
-            pageDiv.className = 'ticket-page';
-            pageDiv.style.width = widthMm + 'mm';
-            pageDiv.style.height = heightMm + 'mm';
-            
+            // إنشاء صفحة A4 جديدة كل 10 تكتات
+            if (index % ticketsPerPage === 0) {
+                currentA4Page = document.createElement('div');
+                currentA4Page.className = 'a4-page';
+                printArea.appendChild(currentA4Page);
+            }
+
             const arabicName = row[tableHeaders[0]] || '';
             const latinName = row[tableHeaders[1]] || '';
             const weight = getWeightFromColumn(row);
@@ -344,43 +355,46 @@
 
             const grundpreisText = calculateGrundpreis(mainPriceNum, weight);
 
+            const ticketDiv = document.createElement('div');
+            ticketDiv.className = 'ticket-box';
+
             let contentHTML = `
-                <!-- رأس التكت: الاسم العربي، تحته اللاتيني، وتحتهما الوزن بحجم مضاعف (دبل) -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; height: 32px;">
-                    <div style="font-size: 11px; font-weight: bold; color: #111; line-height: 1.15; text-align: left; max-width: 75%; overflow: hidden;">
-                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: 11.5px;">${arabicName}</div>
-                        <div style="font-weight: bold; font-size: 11px;">${latinName}</div>
-                        <div style="font-size: 10px; color: #333; font-weight: bold;">${weight}</div>
+                <!-- رأس التكت: الاسم العربي، تحته اللاتيني، وتحتهما الوزن -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; height: 55px;">
+                    <div style="font-weight: bold; color: #111; line-height: 1.25; text-align: left; max-width: 80%; overflow: hidden;">
+                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: 15px;">${arabicName}</div>
+                        <div style="font-weight: bold; font-size: 14px;">${latinName}</div>
+                        <div style="font-size: 13px; color: #333; font-weight: bold;">${weight}</div>
                     </div>
                     <!-- اسم المحل فوق على اليمين -->
-                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 2px; padding: 1px 3px; font-size: 5.5px; font-weight: bold; color: #334155; white-space: nowrap;">
+                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: 2px 6px; font-size: 9px; font-weight: bold; color: #334155; white-space: nowrap;">
                         Nogoom Markt
                     </div>
                 </div>
 
-                <!-- صندوق السعر الملون (كبير جداً) -->
-                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 1px 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; height: 40px;">
+                <!-- صندوق السعر الملون العملاق -->
+                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 4px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; height: 75px;">
                     <div style="display: flex; flex-direction: column; justify-content: center;">
-                        ${oldPriceNum ? `<span style="font-size: 10px; text-decoration: line-through; color: #fca5a5; font-weight: bold;">${oldPriceNum} €</span>` : ''}
+                        ${oldPriceNum ? `<span style="font-size: 16px; text-decoration: line-through; color: #fca5a5; font-weight: bold;">${oldPriceNum} €</span>` : ''}
                     </div>
-                    <div style="font-size: 28px; font-weight: bold; letter-spacing: -1px; line-height: 1;">
+                    <div style="font-size: 44px; font-weight: bold; letter-spacing: -1px; line-height: 1;">
                         ${mainPriceNum} €
                     </div>
                 </div>
 
-                <!-- القسم السفلي: سعر الكيلو/اللتر على اليسار + الباركود في المنتصف -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 16px; position: relative;">
-                    <div style="font-size: 6px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 0px;">
+                <!-- القسم السفلي: سعر الكيلو/اللتر + الباركود -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 35px; position: relative;">
+                    <div style="font-size: 11px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 2px;">
                         ${grundpreisText}
                     </div>
                     <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
-                        <svg id="barcode-${index}" style="max-height: 13px; width: auto;"></svg>
+                        <svg id="barcode-${index}" style="max-height: 30px; width: auto;"></svg>
                     </div>
                 </div>
             `;
             
-            pageDiv.innerHTML = contentHTML;
-            printArea.appendChild(pageDiv);
+            ticketDiv.innerHTML = contentHTML;
+            currentA4Page.appendChild(ticketDiv);
 
             setTimeout(() => {
                 try {
@@ -388,8 +402,8 @@
                         JsBarcode(`#barcode-${index}`, String(barcode), {
                             format: "CODE128",
                             displayValue: true,
-                            fontSize: 6,
-                            height: 9,
+                            fontSize: 10,
+                            height: 24,
                             margin: 0
                         });
                     }
