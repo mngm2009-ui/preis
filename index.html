@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت الاحترافي (مطابق للصورة)</title>
+    <title>مولد ملصقات نجوم ماركت</title>
     <!-- مكتبة قراءة الإكسل -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -112,8 +112,18 @@
             display: none;
         }
 
-        /* تنسيق التكت المطابق للصورة تماماً عند الطباعة */
+        /* إعدادات الطباعة الدقيقة لمقاس 5سم × 3سم */
         @media print {
+            @page {
+                size: 5cm 3cm;
+                margin: 0;
+            }
+            body, html {
+                margin: 0;
+                padding: 0;
+                width: 5cm;
+                height: 3cm;
+            }
             body * {
                 visibility: hidden;
             }
@@ -125,9 +135,11 @@
                 position: absolute;
                 top: 0;
                 right: 0;
-                width: 100%;
+                width: 5cm;
             }
             .ticket-page {
+                width: 5cm !important;
+                height: 3cm !important;
                 page-break-after: always;
                 break-after: page;
                 box-sizing: border-box;
@@ -136,7 +148,9 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
-                padding: 2mm 3mm;
+                padding: 1mm 2mm;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
@@ -144,15 +158,14 @@
 <body>
 
 <div class="container">
-    <h1>تصميم ملصقات نجوم ماركت (مطابق للصورة)</h1>
+    <h1>مولد ملصقات نجوم ماركت</h1>
     
     <div class="info-box">
-        <strong>تعليمات الاستخدام:</strong>
+        <strong>تعليمات الطباعة:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>ارفع ملف الإكسل الخاص بالمنتجات.</li>
-            <li>القياسات الافتراضية مضبوطة على <strong>عرض 5 سم × ارتفاع 3 سم</strong> (مطابق للصورة).</li>
+            <li>ارفع ملف الإكسل.</li>
             <li>اضغط على <strong>"توليد الملصقات للطباعة / حفظ PDF"</strong>.</li>
-            <li>في نافذة الطباعة، اختر <strong>"حفظ كـ PDF" (Save as PDF)</strong> وسيكون التصميم مرتباً بالألوان والبارسكود تماماً كالصورة!</li>
+            <li>تأكد في خيارات المتصفح من جعل الهوامش <strong>(Margins: None)</strong> وإلغاء الرؤوس والتذييلات.</li>
         </ol>
     </div>
 
@@ -196,7 +209,6 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                // قراءة البيانات وتخطي أول سطرين
                 excelData = XLSX.utils.sheet_to_json(worksheet, { range: 2, defval: "", raw: false });
                 
                 if (excelData.length === 0) {
@@ -217,6 +229,88 @@
         reader.readAsArrayBuffer(file);
     });
 
+    // دالة للبحث عن عمود "الوزن" وتحويله إلى لاتيني كامل
+    function getWeightFromColumn(row) {
+        let weightRaw = '';
+        for (let key in row) {
+            if (key.includes('وزن') || key.includes('الوزن')) {
+                weightRaw = String(row[key]).trim();
+                break;
+            }
+        }
+        if (!weightRaw && tableHeaders.length > 3) {
+            weightRaw = String(row[tableHeaders[3]] || '').trim();
+        }
+
+        if (!weightRaw) return '';
+
+        let western = weightRaw.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        let numMatch = western.match(/[\d.,]+/);
+        if (!numMatch) return western;
+        let num = numMatch[0];
+
+        let unit = 'Gr';
+        let lower = western.toLowerCase();
+        if (lower.includes('كيلو') || lower.includes('kg')) {
+            unit = 'Kg';
+        } else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) {
+            unit = 'Gr';
+        } else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) {
+            unit = 'L';
+        } else if (lower.includes('مل') || lower.includes('ml')) {
+            unit = 'ml';
+        }
+
+        return `${num}${unit}`;
+    }
+
+    // دالة لتنظيف السعر واستخراج الرقم فقط
+    function cleanPriceVal(val) {
+        if (!val) return '';
+        let cleaned = String(val).replace(/[^\d.,]/g, '').replace(',', '.');
+        let num = parseFloat(cleaned);
+        return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
+    }
+
+    // دالة لحساب سعر الكيلو أو اللتر تلقائياً (النظام الألماني Grundpreis)
+    function calculateGrundpreis(priceStr, weightStr) {
+        if (!priceStr || !weightStr) return '';
+        
+        let cleanPrice = parseFloat(String(priceStr).replace(/[^\d.,]/g, '').replace(',', '.'));
+        if (isNaN(cleanPrice)) return '';
+
+        let wLower = String(weightStr).toLowerCase().trim();
+        let match = wLower.match(/([\d.,]+)\s*(gr|g|kg|ml|l)/);
+        if (!match) return '';
+
+        let val = parseFloat(match[1].replace(',', '.'));
+        let unit = match[2];
+        if (isNaN(val) || val === 0) return '';
+
+        let totalKgOrL = 0;
+        let targetUnit = 'Kg';
+
+        if (unit === 'g' || unit === 'gr') {
+            totalKgOrL = val / 1000;
+            targetUnit = 'Kg';
+        } else if (unit === 'kg') {
+            totalKgOrL = val;
+            targetUnit = 'Kg';
+        } else if (unit === 'ml') {
+            totalKgOrL = val / 1000;
+            targetUnit = 'L';
+        } else if (unit === 'l') {
+            totalKgOrL = val;
+            targetUnit = 'L';
+        }
+
+        if (totalKgOrL > 0) {
+            let grundPrice = (cleanPrice / totalKgOrL).toFixed(2);
+            return `${grundPrice.replace('.', ',')} €/${targetUnit}`;
+        }
+        return '';
+    }
+
     generateBtn.addEventListener('click', () => {
         if (excelData.length === 0) return;
 
@@ -235,57 +329,67 @@
             pageDiv.style.width = widthMm + 'mm';
             pageDiv.style.height = heightMm + 'mm';
             
-            // استخراج الأعمدة حسب هيكل ملف الإكسل الخاص بك
-            // الأعمدة المتوقعة: الاسم (عربي)، الاسم (ألماني/لاتيني)، النوع، الوزن، الباركود، السعر الأساسي، سعر العرض
             const arabicName = row[tableHeaders[0]] || '';
             const latinName = row[tableHeaders[1]] || '';
-            const weight = row[tableHeaders[3]] || '';
+            const weight = getWeightFromColumn(row);
             const barcode = row[tableHeaders[4]] || '';
-            const basePrice = row[tableHeaders[5]] || '';
-            const offerPrice = row[tableHeaders[6]] || '';
+            const basePriceRaw = row[tableHeaders[5]] || '';
+            const offerPriceRaw = row[tableHeaders[6]] || '';
 
-            // هل يوجد عرض؟ إذا كان سعر العرض موجوداً وليس فارغاً، فاللون برتقالي، وإلا أسود
-            const hasOffer = offerPrice !== undefined && offerPrice !== null && String(offerPrice).trim() !== "";
-            const boxBgColor = hasOffer ? '#e65100' : '#1e293b'; // برتقالي للعروض أو أسود فخم للسعر العادي
-            const mainPrice = hasOffer ? offerPrice : basePrice;
-            const oldPrice = hasOffer ? basePrice : '';
+            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "";
+            const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
+            
+            const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
+            const oldPriceNum = hasOffer ? cleanPriceVal(basePriceRaw) : '';
+
+            const grundpreisText = calculateGrundpreis(mainPriceNum, weight);
 
             let contentHTML = `
-                <!-- قسم اسم المنتج في الأعلى -->
-                <div style="font-size: 8.5px; font-weight: bold; color: #111; line-height: 1.1; text-align: right; max-height: 22px; overflow: hidden;">
-                    <div>${arabicName}</div>
-                    <div style="font-size: 7.5px; color: #555; font-weight: normal;">${latinName} ${weight ? '(' + weight + ')' : ''}</div>
+                <!-- رأس التكت: الاسم العربي، تحته اللاتيني، وتحتهما الوزن بحجم مضاعف (دبل) -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; height: 32px;">
+                    <div style="font-size: 11px; font-weight: bold; color: #111; line-height: 1.15; text-align: left; max-width: 75%; overflow: hidden;">
+                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: 11.5px;">${arabicName}</div>
+                        <div style="font-weight: bold; font-size: 11px;">${latinName}</div>
+                        <div style="font-size: 10px; color: #333; font-weight: bold;">${weight}</div>
+                    </div>
+                    <!-- اسم المحل فوق على اليمين -->
+                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 2px; padding: 1px 3px; font-size: 5.5px; font-weight: bold; color: #334155; white-space: nowrap;">
+                        Nogoom Markt
+                    </div>
                 </div>
 
-                <!-- قسم السعر واللون (برتقالي أو أسود) مطابق للصورة -->
-                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; margin: 2px 0;">
+                <!-- صندوق السعر الملون (كبير جداً) -->
+                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 1px 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; height: 40px;">
                     <div style="display: flex; flex-direction: column; justify-content: center;">
-                        ${oldPrice ? `<span style="font-size: 9px; text-decoration: line-through; color: #ffccbc; font-weight: bold;">${oldPrice}€</span>` : ''}
-                        <span style="font-size: 7px; color: #ddd;">${weight ? weight : ''}</span>
+                        ${oldPriceNum ? `<span style="font-size: 10px; text-decoration: line-through; color: #fca5a5; font-weight: bold;">${oldPriceNum} €</span>` : ''}
                     </div>
-                    <div style="font-size: 20px; font-weight: bold; letter-spacing: -0.5px;">
-                        ${mainPrice}€
+                    <div style="font-size: 28px; font-weight: bold; letter-spacing: -1px; line-height: 1;">
+                        ${mainPriceNum} €
                     </div>
                 </div>
 
-                <!-- قسم الباركود في الأسفل -->
-                <div style="display: flex; justify-content: center; align-items: center; height: 22px; margin-top: auto;">
-                    <svg id="barcode-${index}" style="max-height: 20px; width: auto;"></svg>
+                <!-- القسم السفلي: سعر الكيلو/اللتر على اليسار + الباركود في المنتصف -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 16px; position: relative;">
+                    <div style="font-size: 6px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 0px;">
+                        ${grundpreisText}
+                    </div>
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+                        <svg id="barcode-${index}" style="max-height: 13px; width: auto;"></svg>
+                    </div>
                 </div>
             `;
             
             pageDiv.innerHTML = contentHTML;
             printArea.appendChild(pageDiv);
 
-            // توليد الباركود بعد إدراج العناصر في الصفحة
             setTimeout(() => {
                 try {
                     if (barcode) {
                         JsBarcode(`#barcode-${index}`, String(barcode), {
                             format: "CODE128",
                             displayValue: true,
-                            fontSize: 8,
-                            height: 15,
+                            fontSize: 6,
+                            height: 9,
                             margin: 0
                         });
                     }
@@ -295,7 +399,6 @@
             }, 100);
         });
 
-        // الانتظار قليلاً لضمان توليد الباركودات ثم فتح نافذة الطباعة
         setTimeout(() => {
             window.print();
         }, 500);
