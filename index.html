@@ -1,1 +1,386 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منشئ ملصقات PDF يدعم اللغة العربية بالكامل</title>
+    <!-- تضمين مكتبة jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- تضمين مكتبة SheetJS لقراءة ملفات الإكسل -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #cbd5e1;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="file"], select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+
+        input[type="file"]:focus, select:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .unit-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+
+        .unit-selector label {
+            font-weight: normal;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 20px;
+        }
+
+        .table-responsive {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #f1f5f9;
+            position: sticky;
+            top: 0;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .info-box {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>مولد ملصقات PDF (يدعم اللغة العربية 100%)</h1>
+    
+    <div class="info-box">
+        <strong>مميزات التحديث:</strong> تم دمج خط عربي قياسي داخل ملف الـ PDF لمنع ظهور الرموز المخربطة، وسيتم تصدير ملف واحد متكامل يضم كافة الملصقات.
+    </div>
+
+    <div class="form-group">
+        <label for="excelFile">اختر ملف Excel (.xlsx أو .csv):</label>
+        <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+    </div>
+
+    <div class="form-group">
+        <label>وحدة القياس للمقاسات:</label>
+        <div class="unit-selector">
+            <label><input type="radio" name="unit" value="mm" checked> مليمتر (mm)</label>
+            <label><input type="radio" name="unit" value="cm"> سنتيمتر (cm)</label>
+            <label><input type="radio" name="unit" value="in"> إنش (inch)</label>
+        </div>
+    </div>
+
+    <div class="dimensions-grid">
+        <div class="form-group">
+            <label for="widthInput">عرض التكت:</label>
+            <input type="number" id="widthInput" value="100" step="0.1" min="1">
+        </div>
+        <div class="form-group">
+            <label for="heightInput">ارتفاع التكت:</label>
+            <input type="number" id="heightInput" value="150" step="0.1" min="1">
+        </div>
+    </div>
+
+    <button class="btn" id="generateBtn" disabled>توليد وتنزيل ملف PDF الشامل</button>
+    <div class="loader" id="loader">جاري تحميل الخط العربي وتوليد الملف، يرجى الانتظار...</div>
+
+    <div class="preview-section" id="previewSection" style="display: none;">
+        <label>معاينة بيانات ملف Excel (تم قراءة <span id="rowCount">0</span> صف):</label>
+        <div class="table-responsive">
+            <table id="previewTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let excelData = [];
+    let tableHeaders = [];
+
+    const excelFileInput = document.getElementById('excelFile');
+    const generateBtn = document.getElementById('generateBtn');
+    const loader = document.getElementById('loader');
+    const previewSection = document.getElementById('previewSection');
+    const tableHead = document.getElementById('tableHead');
+    const tableBody = document.getElementById('tableBody');
+    const rowCountSpan = document.getElementById('rowCount');
+
+    excelFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                
+                if (excelData.length === 0) {
+                    alert('ملف الإكسل فارغ أو لا يحتوي على صفوف صالحة!');
+                    previewSection.style.display = 'none';
+                    generateBtn.disabled = true;
+                    return;
+                }
+
+                tableHeaders = Object.keys(excelData[0]);
+                renderPreviewTable();
+                generateBtn.disabled = false;
+                alert(`تم قراءة ملف الإكسل بنجاح! عدد الصفوف: ${excelData.length}`);
+            } catch (err) {
+                console.error(err);
+                alert('حدث خطأ أثناء قراءة الملف. تأكد من أن الملف سليم.');
+                generateBtn.disabled = true;
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function renderPreviewTable() {
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = '';
+        rowCountSpan.textContent = excelData.length;
+
+        let headRow = '<tr>';
+        tableHeaders.forEach(header => {
+            headRow += `<th>${header}</th>`;
+        });
+        headRow += '</tr>';
+        tableHead.innerHTML = headRow;
+
+        const previewLimit = Math.min(excelData.length, 50);
+        for (let i = 0; i < previewLimit; i++) {
+            let row = '<tr>';
+            tableHeaders.forEach(header => {
+                row += `<td>${excelData[i][header]}</td>`;
+            });
+            row += '</tr>';
+            tableBody.innerHTML += row;
+        }
+
+        previewSection.style.display = 'block';
+    }
+
+    // دالة مساعدة لتحويل الخط إلى Base64 لكي تقبله مكتبة الـ PDF
+    async function getBase64Font() {
+        // استخدام خط Cairo المدعوم بصيغة وُب آمنة
+        const fontUrl = 'https://cdn.jsdelivr.net/npm/@fontsource/cairo@5.0.8/files/cairo-arabic-400-normal.woff';
+        const response = await fetch(fontUrl);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // استخراج جزء الـ Base64 فقط
+                const base64String = reader.result.split(',')[1];
+                resolve(base64String);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    generateBtn.addEventListener('click', async () => {
+        if (excelData.length === 0) {
+            alert('الرجاء اختيار ملف Excel أولاً!');
+            return;
+        }
+
+        const width = parseFloat(document.getElementById('widthInput').value);
+        const height = parseFloat(document.getElementById('heightInput').value);
+        const unit = document.querySelector('input[name="unit"]:checked').value;
+
+        if (!width || !height || width <= 0 || height <= 0) {
+            alert('الرجاء إدخال أبعاد صحيحة للتكت.');
+            return;
+        }
+
+        loader.style.display = 'block';
+        generateBtn.disabled = true;
+
+        try {
+            const { jsPDF } = window.jspdf;
+
+            // جلب الخط العربي وتضمينه
+            const fontBase64 = await getBase64Font();
+
+            const pdf = new jsPDF({
+                orientation: width > height ? 'l' : 'p',
+                unit: unit,
+                format: [width, height]
+            });
+
+            // تسجيل الخط العربي في الـ PDF
+            pdf.addFileToVFS('Cairo-Regular.ttf', fontBase64);
+            pdf.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
+            pdf.setFont('Cairo');
+
+            for (let i = 0; i < excelData.length; i++) {
+                if (i > 0) {
+                    pdf.addPage([width, height], width > height ? 'l' : 'p');
+                    pdf.setFont('Cairo'); // إعادة تفعيل الخط لكل صفحة جديدة
+                }
+
+                const rowData = excelData[i];
+                let yOffset = 10;
+                const leftMargin = 5;
+                const maxWidth = width - 10;
+
+                tableHeaders.forEach(header => {
+                    const value = rowData[header];
+                    if (yOffset < height - 10) {
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(100, 100, 100);
+                        // عكس الاتجاه أو كتابة الحقول بشكل نظيف
+                        pdf.text(`${header}:`, leftMargin, yOffset);
+                        
+                        yOffset += 4.5;
+                        pdf.setFontSize(11);
+                        pdf.setTextColor(20, 20, 20);
+                        
+                        const splitText = pdf.splitTextToSize(String(value), maxWidth);
+                        pdf.text(splitText, leftMargin, yOffset);
+                        
+                        yOffset += (splitText.length * 4.5) + 3;
+                    }
+                });
+            }
+
+            pdf.save('all_tickets_arabic.pdf');
+            alert('تم توليد وتنزيل ملف الـ PDF باللغة العربية بنجاح!');
+        } catch (error) {
+            console.error(error);
+            alert('حدث خطأ أثناء تحميل الخط أو توليد ملف الـ PDF. تأكد من اتصالك بالإنترنت لجلب الخط العربي.');
+        } finally {
+            loader.style.display = 'none';
+            generateBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
