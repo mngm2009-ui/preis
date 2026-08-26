@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات الإكسل (طباعة مباشرة تدعم العربية)</title>
+    <title>مولد ملصقات نجوم ماركت الاحترافي (مطابق للصورة)</title>
     <!-- مكتبة قراءة الإكسل -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- مكتبة توليد الباركود JsBarcode -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -31,7 +33,7 @@
         }
 
         .container {
-            max-width: 850px;
+            max-width: 800px;
             margin: 0 auto;
             background: var(--card-bg);
             padding: 30px;
@@ -43,7 +45,7 @@
             text-align: center;
             margin-bottom: 25px;
             color: var(--primary);
-            font-size: 24px;
+            font-size: 22px;
         }
 
         .form-group {
@@ -91,6 +93,11 @@
             background-color: var(--primary-hover);
         }
 
+        .btn:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
         .info-box {
             background: #e0f2fe;
             color: #0369a1;
@@ -101,11 +108,11 @@
             line-height: 1.6;
         }
 
-        /* تنسيق خاص بصفحة الطباعة والـ PDF */
         #printArea {
             display: none;
         }
 
+        /* تنسيق التكت المطابق للصورة تماماً عند الطباعة */
         @media print {
             body * {
                 visibility: hidden;
@@ -123,44 +130,51 @@
             .ticket-page {
                 page-break-after: always;
                 break-after: page;
+                box-sizing: border-box;
+                overflow: hidden;
+                background: #fff;
                 display: flex;
                 flex-direction: column;
-                justify-content: center;
-                align-items: flex-start;
-                padding: 10mm;
+                justify-content: space-between;
+                padding: 2mm 3mm;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="container" id="mainContainer">
-    <h1>مولد ملصقات الإكسل (طباعة PDF عربية 100%)</h1>
+<div class="container">
+    <h1>تصميم ملصقات نجوم ماركت (مطابق للصورة)</h1>
     
     <div class="info-box">
-        <strong>طريقة التشغيل الذكية:</strong> ارفع ملف الإكسل، حدد الأبعاد، ثم اضغط على زر <strong>"عرض وتجهيز الملصقات للطباعة"</strong>. ستفتح لك نافذة الطباعة الخاصة بمتصفحك، اختر منها <strong>"حفظ كـ PDF" (Save as PDF)</strong> وسيعمل الخط العربي وبدون أي أخطاء نهائياً!
+        <strong>تعليمات الاستخدام:</strong>
+        <ol style="margin-right: 20px; margin-top: 5px;">
+            <li>ارفع ملف الإكسل الخاص بالمنتجات.</li>
+            <li>القياسات الافتراضية مضبوطة على <strong>عرض 5 سم × ارتفاع 3 سم</strong> (مطابق للصورة).</li>
+            <li>اضغط على <strong>"توليد الملصقات للطباعة / حفظ PDF"</strong>.</li>
+            <li>في نافذة الطباعة، اختر <strong>"حفظ كـ PDF" (Save as PDF)</strong> وسيكون التصميم مرتباً بالألوان والبارسكود تماماً كالصورة!</li>
+        </ol>
     </div>
 
     <div class="form-group">
-        <label for="excelFile">اختر ملف Excel (.xlsx أو .csv):</label>
+        <label for="excelFile">اختر ملف Excel:</label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
     </div>
 
     <div class="dimensions-grid">
         <div class="form-group">
-            <label for="widthInput">عرض التكت (مليمتر):</label>
-            <input type="number" id="widthInput" value="100" min="10">
+            <label for="widthInput">عرض التكت (سم):</label>
+            <input type="number" id="widthInput" value="5" step="0.5" min="1">
         </div>
         <div class="form-group">
-            <label for="heightInput">ارتفاع التكت (مليمتر):</label>
-            <input type="number" id="heightInput" value="150" min="10">
+            <label for="heightInput">ارتفاع التكت (سم):</label>
+            <input type="number" id="heightInput" value="3" step="0.5" min="1">
         </div>
     </div>
 
-    <button class="btn" id="generateBtn" disabled>عرض وتجهيز الملصقات للطباعة / حفظ PDF</button>
+    <button class="btn" id="generateBtn" disabled>توليد الملصقات للطباعة / حفظ PDF</button>
 </div>
 
-<!-- منطقة الطباعة المخفية التي تتحول لملف PDF -->
 <div id="printArea"></div>
 
 <script>
@@ -182,7 +196,8 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                // قراءة البيانات وتخطي أول سطرين
+                excelData = XLSX.utils.sheet_to_json(worksheet, { range: 2, defval: "", raw: false });
                 
                 if (excelData.length === 0) {
                     alert('ملف الإكسل فارغ أو غير صالح!');
@@ -192,7 +207,7 @@
 
                 tableHeaders = Object.keys(excelData[0]);
                 generateBtn.disabled = false;
-                alert(`تم قراءة الملف بنجاح! عدد الصفوف: ${excelData.length}`);
+                alert(`تم قراءة الملف بنجاح! عدد المنتجات: ${excelData.length}`);
             } catch (err) {
                 console.error(err);
                 alert('حدث خطأ أثناء قراءة الملف.');
@@ -205,43 +220,85 @@
     generateBtn.addEventListener('click', () => {
         if (excelData.length === 0) return;
 
-        const width = document.getElementById('widthInput').value;
-        const height = document.getElementById('heightInput').value;
-        const printArea = document.getElementById('printArea');
+        const widthCm = parseFloat(document.getElementById('widthInput').value) || 5;
+        const heightCm = parseFloat(document.getElementById('heightInput').value) || 3;
         
+        const widthMm = widthCm * 10;
+        const heightMm = heightCm * 10;
+
+        const printArea = document.getElementById('printArea');
         printArea.innerHTML = '';
 
-        // بناء محتوى كل تكت ليكون في صفحة مستقلة عند الطباعة
         excelData.forEach((row, index) => {
             const pageDiv = document.createElement('div');
             pageDiv.className = 'ticket-page';
-            pageDiv.style.width = width + 'mm';
-            pageDiv.style.height = height + 'mm';
-            pageDiv.style.boxSizing = 'border-box';
-            pageDiv.style.border = '1px dashed #ccc'; // إطار اختياري لحدود التكت
-            pageDiv.style.margin = '0 auto';
-            pageDiv.style.background = '#fff';
-            pageDiv.style.overflow = 'hidden';
-            pageDiv.style.position = 'relative';
+            pageDiv.style.width = widthMm + 'mm';
+            pageDiv.style.height = heightMm + 'mm';
             
-            let contentHTML = `<div style="padding: 5mm; width: 100%;">`;
-            tableHeaders.forEach(header => {
-                const val = row[header];
-                contentHTML += `
-                    <div style="margin-bottom: 8px;">
-                        <span style="font-size: 11px; color: #666; display: block; font-weight: bold;">${header}:</span>
-                        <span style="font-size: 14px; color: #111; display: block; font-weight: bold;">${val}</span>
+            // استخراج الأعمدة حسب هيكل ملف الإكسل الخاص بك
+            // الأعمدة المتوقعة: الاسم (عربي)، الاسم (ألماني/لاتيني)، النوع، الوزن، الباركود، السعر الأساسي، سعر العرض
+            const arabicName = row[tableHeaders[0]] || '';
+            const latinName = row[tableHeaders[1]] || '';
+            const weight = row[tableHeaders[3]] || '';
+            const barcode = row[tableHeaders[4]] || '';
+            const basePrice = row[tableHeaders[5]] || '';
+            const offerPrice = row[tableHeaders[6]] || '';
+
+            // هل يوجد عرض؟ إذا كان سعر العرض موجوداً وليس فارغاً، فاللون برتقالي، وإلا أسود
+            const hasOffer = offerPrice !== undefined && offerPrice !== null && String(offerPrice).trim() !== "";
+            const boxBgColor = hasOffer ? '#e65100' : '#1e293b'; // برتقالي للعروض أو أسود فخم للسعر العادي
+            const mainPrice = hasOffer ? offerPrice : basePrice;
+            const oldPrice = hasOffer ? basePrice : '';
+
+            let contentHTML = `
+                <!-- قسم اسم المنتج في الأعلى -->
+                <div style="font-size: 8.5px; font-weight: bold; color: #111; line-height: 1.1; text-align: right; max-height: 22px; overflow: hidden;">
+                    <div>${arabicName}</div>
+                    <div style="font-size: 7.5px; color: #555; font-weight: normal;">${latinName} ${weight ? '(' + weight + ')' : ''}</div>
+                </div>
+
+                <!-- قسم السعر واللون (برتقالي أو أسود) مطابق للصورة -->
+                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 2px 6px; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; margin: 2px 0;">
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        ${oldPrice ? `<span style="font-size: 9px; text-decoration: line-through; color: #ffccbc; font-weight: bold;">${oldPrice}€</span>` : ''}
+                        <span style="font-size: 7px; color: #ddd;">${weight ? weight : ''}</span>
                     </div>
-                `;
-            });
-            contentHTML += `</div>`;
+                    <div style="font-size: 20px; font-weight: bold; letter-spacing: -0.5px;">
+                        ${mainPrice}€
+                    </div>
+                </div>
+
+                <!-- قسم الباركود في الأسفل -->
+                <div style="display: flex; justify-content: center; align-items: center; height: 22px; margin-top: auto;">
+                    <svg id="barcode-${index}" style="max-height: 20px; width: auto;"></svg>
+                </div>
+            `;
             
             pageDiv.innerHTML = contentHTML;
             printArea.appendChild(pageDiv);
+
+            // توليد الباركود بعد إدراج العناصر في الصفحة
+            setTimeout(() => {
+                try {
+                    if (barcode) {
+                        JsBarcode(`#barcode-${index}`, String(barcode), {
+                            format: "CODE128",
+                            displayValue: true,
+                            fontSize: 8,
+                            height: 15,
+                            margin: 0
+                        });
+                    }
+                } catch (err) {
+                    console.error("Barcode error:", err);
+                }
+            }, 100);
         });
 
-        // فتح نافذة طباعة المتصفح
-        window.print();
+        // الانتظار قليلاً لضمان توليد الباركودات ثم فتح نافذة الطباعة
+        setTimeout(() => {
+            window.print();
+        }, 500);
     });
 </script>
 
