@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - A4</title>
-    <!-- مكتبة قراءة الإكسل -->
+    <title>مولد ملصقات نجوم ماركت - المقاسات الذكية</title>
+    <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
@@ -23,6 +23,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-print-color-adjust: exact !important; /* إجبار المتصفح على طباعة الألوان */
+            print-color-adjust: exact !important;
         }
 
         body {
@@ -59,7 +61,7 @@
             font-size: 14px;
         }
 
-        input[type="file"], input[type="number"] {
+        input[type="file"], input[type="number"], select {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -71,7 +73,7 @@
 
         .dimensions-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
         }
 
@@ -99,101 +101,61 @@
         }
 
         .info-box {
-            background: #e0f2fe;
-            color: #0369a1;
+            background: #fff3cd;
+            color: #856404;
             padding: 12px;
             border-radius: 8px;
             font-size: 13px;
             margin-bottom: 20px;
             line-height: 1.6;
+            border: 1px solid #ffeeba;
         }
 
-        #printArea {
-            display: none;
-        }
+        .info-box strong { color: #d32f2f; }
 
-        /* إعدادات طباعة صفحات A4 تحتوي كل صفحة على شبكة من التكتات بمقاس 7×5 سم */
+        /* إعدادات الطباعة الأساسية */
+        #printArea { display: none; }
+
         @media print {
-            @page {
-                size: A4 portrait;
-                margin: 10mm;
-            }
-            body, html {
-                margin: 0;
-                padding: 0;
-                width: 210mm;
-                height: 297mm;
-            }
-            body * {
-                visibility: hidden;
-            }
-            #printArea, #printArea * {
-                visibility: visible;
-            }
-            #printArea {
-                display: block;
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 190mm;
-            }
-            .a4-page {
-                width: 190mm;
-                height: 277mm;
-                page-break-after: always;
-                break-after: page;
-                display: grid;
-                grid-template-columns: repeat(2, 7cm); /* عمودين في العرض */
-                grid-template-rows: repeat(5, 5cm);    /* 5 صفوف في الارتفاع = 10 تكتات بالصفحة */
-                gap: 5mm 5mm;
-                align-content: start;
-                justify-content: start;
-                background: #fff;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .ticket-box {
-                width: 7cm;
-                height: 5cm;
-                box-sizing: border-box;
-                overflow: hidden;
-                background: #fff;
-                border: 1px dashed #94a3b8; /* خط حدود خفيف للقص أو بدون حدود حسب الرغبة */
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: 3mm 4mm;
-            }
+            body { background-color: #ffffff; padding: 0; margin: 0; }
+            .no-print { display: none !important; }
+            #printArea { display: block !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>مولد ملصقات نجوم ماركت (تعبئة صفحات A4)</h1>
+<div class="container no-print">
+    <h1>مولد ملصقات نجوم ماركت (تحديث القياسات الذكية)</h1>
     
     <div class="info-box">
-        <strong>تعليمات الطباعة:</strong>
-        <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>ارفع ملف الإكسل (سيتم توزيع المنتجات تلقائياً على صفحات A4 بواقع 10 تكتات لكل صفحة).</li>
-            <li>اضغط على <strong>"توليد الملصقات للطباعة / حفظ PDF"</strong>.</li>
-            <li>في إعدادات طابعة المتصفح، تأكد من جعل المقاس <strong>A4</strong> والهوامش <strong>(Margins: Default أو Minimum)</strong> وإلغاء الرؤوس والتذييلات.</li>
-        </ol>
+        <strong>⚠️ خطوة مهمة جداً لظهور لون السعر:</strong><br>
+        عندما تفتح لك شاشة الطباعة، ابحث عن <strong>"مزيد من الإعدادات" (More settings)</strong>، وضع علامة صح (✔️) بجانب <strong>"رسومات الخلفية" (Background graphics)</strong>.
     </div>
 
     <div class="form-group">
-        <label for="excelFile">اختر ملف Excel:</label>
+        <label for="excelFile">اختر ملف CSV أو Excel:</label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv">
     </div>
 
     <div class="dimensions-grid">
         <div class="form-group">
-            <label for="widthInput">عرض التكت (سم):</label>
-            <input type="number" id="widthInput" value="7" readonly style="background: #f1f5f9;">
+            <label>مقاس البطاقة (عدد لكل صفحة):</label>
+            <select id="cardSizeSelect">
+                <option value="7,4.5" selected>الأساسي (7 × 4.5 سم)</option>
+                <option value="19,13.5">مقاس A5 (2 بطاقة في الصفحة)</option>
+                <option value="9.5,13.5">مقاس A6 (4 بطاقات في الصفحة)</option>
+                <option value="9.5,6.5">مقاس A7 (8 بطاقات في الصفحة)</option>
+                <option value="custom">مقاس مخصص (تعديل يدوي)</option>
+            </select>
         </div>
         <div class="form-group">
-            <label for="heightInput">ارتفاع التكت (سم):</label>
-            <input type="number" id="heightInput" value="5" readonly style="background: #f1f5f9;">
+            <label>عرض البطاقة (سم):</label>
+            <input type="number" id="widthInput" value="7" step="0.1" min="2">
+        </div>
+        <div class="form-group">
+            <label>ارتفاع البطاقة (سم):</label>
+            <input type="number" id="heightInput" value="4.5" step="0.1" min="2">
         </div>
     </div>
 
@@ -204,7 +166,61 @@
 
 <script>
     let excelData = [];
-    let tableHeaders = [];
+    
+    // القاموس
+    const autoTranslate = {
+        'زيت زيتون': 'Olivenöl', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
+        'قهوه': 'Kaffee', 'قهوة': 'Kaffee', 'بن': 'Kaffee', 'حسيب': 'Haseeb',
+        'اخضر': 'Grün', 'ذهبي': 'Gold', 'سائل': 'Flüssig', 'شاي': 'Tee',
+        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
+        'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft',
+        'بسكويت': 'Kekse', 'شيبس': 'Chips', 'رز': 'Reis', 'أرز': 'Reis',
+        'مخلل': 'Eingelegtes', 'طحينة': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
+        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul', 'بهارات': 'Gewürze',
+        'سردين': 'Sardinen', 'تونة': 'Thunfisch', 'ملوخية': 'Molokhia'
+    };
+
+    const arabicToLatinMap = {
+        'ا': 'a', 'أ': 'a', 'إ': 'e', 'آ': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th',
+        'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z',
+        'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a',
+        'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
+        'ه': 'h', 'ة': 'h', 'و': 'w', 'ي': 'i', 'ى': 'a', 'ئ': 'e', 'ؤ': 'o'
+    };
+
+    const cardSizeSelect = document.getElementById('cardSizeSelect');
+    const widthInput = document.getElementById('widthInput');
+    const heightInput = document.getElementById('heightInput');
+
+    cardSizeSelect.addEventListener('change', (e) => {
+        if (e.target.value !== 'custom') {
+            const dims = e.target.value.split(',');
+            widthInput.value = dims[0];
+            heightInput.value = dims[1];
+        }
+    });
+
+    function generateGermanName(arabicName) {
+        if(!arabicName) return "Orientalische Produkte";
+        let nameToProcess = arabicName;
+        for (let key in autoTranslate) {
+            if (nameToProcess.includes(key)) {
+                nameToProcess = nameToProcess.replace(new RegExp(key, 'g'), autoTranslate[key]);
+            }
+        }
+        let finalResult = '';
+        for (let i = 0; i < nameToProcess.length; i++) {
+            let char = nameToProcess[i];
+            if (/[\u0600-\u06FF]/.test(char)) {
+                finalResult += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
+            } else {
+                finalResult += char;
+            }
+        }
+        finalResult = finalResult.replace(/\s+/g, ' ').trim();
+        let formattedResult = finalResult.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return formattedResult || "Orientalische Produkte";
+    }
 
     const excelFileInput = document.getElementById('excelFile');
     const generateBtn = document.getElementById('generateBtn');
@@ -214,22 +230,30 @@
         if (!file) return;
 
         const reader = new FileReader();
+        const isCSV = file.name.toLowerCase().endsWith('.csv');
+
         reader.onload = function(e) {
             try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                let workbook;
+                if (isCSV) {
+                    const text = e.target.result;
+                    workbook = XLSX.read(text, { type: 'string' });
+                } else {
+                    const data = new Uint8Array(e.target.result);
+                    workbook = XLSX.read(data, { type: 'array' });
+                }
+                
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                excelData = XLSX.utils.sheet_to_json(worksheet, { range: 2, defval: "", raw: false });
+                excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
                 
                 if (excelData.length === 0) {
-                    alert('ملف الإكسل فارغ أو غير صالح!');
+                    alert('الملف فارغ أو غير صالح!');
                     generateBtn.disabled = true;
                     return;
                 }
 
-                tableHeaders = Object.keys(excelData[0]);
                 generateBtn.disabled = false;
                 alert(`تم قراءة الملف بنجاح! عدد المنتجات: ${excelData.length}`);
             } catch (err) {
@@ -238,84 +262,59 @@
                 generateBtn.disabled = true;
             }
         };
-        reader.readAsArrayBuffer(file);
+
+        if (isCSV) {
+            reader.readAsText(file, 'UTF-8');
+        } else {
+            reader.readAsArrayBuffer(file);
+        }
     });
 
-    // دالة استخراج الوزن من عمود الوزن وتحويله للاتيني
-    function getWeightFromColumn(row) {
-        let weightRaw = '';
-        for (let key in row) {
-            if (key.includes('وزن') || key.includes('الوزن')) {
-                weightRaw = String(row[key]).trim();
-                break;
-            }
+    function formatWeight(w) {
+        if (!w) return '';
+        let western = String(w).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        const stkKeywords = ['ظرف', 'قطعه', 'قطعة', 'حبه', 'حبة', 'حبات', 'قطع', 'كيس', 'اكياس'];
+        let isStuck = false;
+        for (let i = 0; i < stkKeywords.length; i++) {
+            if (western.includes(stkKeywords[i])) { isStuck = true; break; }
         }
-        if (!weightRaw && tableHeaders.length > 3) {
-            weightRaw = String(row[tableHeaders[3]] || '').trim();
-        }
-
-        if (!weightRaw) return '';
-
-        let western = weightRaw.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
         let numMatch = western.match(/[\d.,]+/);
-        if (!numMatch) return western;
+        if (!numMatch) return western; 
         let num = numMatch[0];
-
+        if (isStuck) return `${num} Stk`;
         let unit = 'Gr';
         let lower = western.toLowerCase();
-        if (lower.includes('كيلو') || lower.includes('kg')) {
-            unit = 'Kg';
-        } else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) {
-            unit = 'Gr';
-        } else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) {
-            unit = 'L';
-        } else if (lower.includes('مل') || lower.includes('ml')) {
-            unit = 'ml';
-        }
-
-        return `${num}${unit}`;
+        if (lower.includes('كيلو') || lower.includes('kg')) unit = 'Kg';
+        else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) unit = 'Gr';
+        else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) unit = 'L';
+        else if (lower.includes('مل') || lower.includes('ml')) unit = 'ml';
+        return `${num} ${unit}`;
     }
 
-    // تنظيف السعر
     function cleanPriceVal(val) {
-        if (!val) return '';
+        if (val === undefined || val === null || val === '') return '';
         let cleaned = String(val).replace(/[^\d.,]/g, '').replace(',', '.');
         let num = parseFloat(cleaned);
         return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
     }
 
-    // حساب سعر الكيلو أو اللتر (Grundpreis)
     function calculateGrundpreis(priceStr, weightStr) {
         if (!priceStr || !weightStr) return '';
-        
         let cleanPrice = parseFloat(String(priceStr).replace(/[^\d.,]/g, '').replace(',', '.'));
         if (isNaN(cleanPrice)) return '';
-
         let wLower = String(weightStr).toLowerCase().trim();
+        if (wLower.includes('stk')) return ''; 
         let match = wLower.match(/([\d.,]+)\s*(gr|g|kg|ml|l)/);
         if (!match) return '';
-
         let val = parseFloat(match[1].replace(',', '.'));
         let unit = match[2];
         if (isNaN(val) || val === 0) return '';
-
         let totalKgOrL = 0;
         let targetUnit = 'Kg';
-
-        if (unit === 'g' || unit === 'gr') {
-            totalKgOrL = val / 1000;
-            targetUnit = 'Kg';
-        } else if (unit === 'kg') {
-            totalKgOrL = val;
-            targetUnit = 'Kg';
-        } else if (unit === 'ml') {
-            totalKgOrL = val / 1000;
-            targetUnit = 'L';
-        } else if (unit === 'l') {
-            totalKgOrL = val;
-            targetUnit = 'L';
-        }
-
+        if (unit === 'g' || unit === 'gr') { totalKgOrL = val / 1000; targetUnit = 'Kg'; }
+        else if (unit === 'kg') { totalKgOrL = val; targetUnit = 'Kg'; }
+        else if (unit === 'ml') { totalKgOrL = val / 1000; targetUnit = 'L'; }
+        else if (unit === 'l') { totalKgOrL = val; targetUnit = 'L'; }
         if (totalKgOrL > 0) {
             let grundPrice = (cleanPrice / totalKgOrL).toFixed(2);
             return `${grundPrice.replace('.', ',')} €/${targetUnit}`;
@@ -326,69 +325,131 @@
     generateBtn.addEventListener('click', () => {
         if (excelData.length === 0) return;
 
+        const a4_w = 210; 
+        const a4_h = 297; 
+        const pageMargin = 5; 
+        const gap = 5; 
+        
+        const tw_cm = parseFloat(widthInput.value) || 7;
+        const th_cm = parseFloat(heightInput.value) || 4.5;
+        const tw = tw_cm * 10; 
+        const th = th_cm * 10; 
+
+        // الخوارزمية الذكية لتكبير الخطوط بناءً على حجم البطاقة
+        // نأخذ أصغر نسبة تكبير (بين الطول والعرض) حتى لا تخرج النصوص عن الإطار
+        const fontScale = Math.min(tw_cm / 7, th_cm / 4.5);
+
+        const usableW = a4_w - (pageMargin * 2);
+        const usableH = a4_h - (pageMargin * 2);
+
+        let cols = Math.floor((usableW + gap) / (tw + gap));
+        let rows = Math.floor((usableH + gap) / (th + gap));
+        
+        if (cols < 1) cols = 1; 
+        if (rows < 1) rows = 1;
+        const ticketsPerPage = cols * rows;
+
+        const styleId = "dynamic-print-style";
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
+        }
+
+        styleEl.innerHTML = `
+            @media print {
+                @page { size: A4 portrait; margin: 0; }
+                .print-page {
+                    width: 210mm;
+                    height: 296mm;
+                    padding: ${pageMargin}mm;
+                    box-sizing: border-box;
+                    display: grid;
+                    grid-template-columns: repeat(${cols}, ${tw}mm);
+                    grid-template-rows: repeat(${rows}, ${th}mm);
+                    gap: ${gap}mm;
+                    page-break-after: always;
+                    break-after: page;
+                    align-content: start;
+                    justify-content: start;
+                }
+                .print-page:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
+                }
+                .ticket-box {
+                    width: ${tw}mm;
+                    height: ${th}mm;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    border: 1px dashed #cbd5e1; 
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    padding: ${3 * fontScale}mm ${4 * fontScale}mm;
+                    background: #fff;
+                }
+            }
+        `;
+
         const printArea = document.getElementById('printArea');
         printArea.innerHTML = '';
-
-        const ticketsPerPage = 10; // 2 أعمدة × 5 صفوف في كل صفحة A4
         let currentA4Page = null;
 
         excelData.forEach((row, index) => {
-            // إنشاء صفحة A4 جديدة كل 10 تكتات
             if (index % ticketsPerPage === 0) {
                 currentA4Page = document.createElement('div');
-                currentA4Page.className = 'a4-page';
+                currentA4Page.className = 'print-page';
                 printArea.appendChild(currentA4Page);
             }
 
-            const arabicName = row[tableHeaders[0]] || '';
-            const latinName = row[tableHeaders[1]] || '';
-            const weight = getWeightFromColumn(row);
-            const barcode = row[tableHeaders[4]] || '';
-            const basePriceRaw = row[tableHeaders[5]] || '';
-            const offerPriceRaw = row[tableHeaders[6]] || '';
+            let arabicName = row['Produkt'] || row['الاسم (عربي)'] || '';
+            let weightRaw = row['Beschreibung'] || row['الوزن'] || '';
+            let barcode = row['Barcode'] || row['الباركود'] || '';
+            let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || '';
+            let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || '';
+            
+            let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
+            const weight = formatWeight(weightRaw);
             const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "";
             const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
             
             const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
             const oldPriceNum = hasOffer ? cleanPriceVal(basePriceRaw) : '';
-
             const grundpreisText = calculateGrundpreis(mainPriceNum, weight);
 
             const ticketDiv = document.createElement('div');
             ticketDiv.className = 'ticket-box';
 
             let contentHTML = `
-                <!-- رأس التكت: الاسم العربي، تحته اللاتيني، وتحتهما الوزن -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; height: 55px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 0 0 auto; margin-bottom: ${2 * fontScale}px;">
                     <div style="font-weight: bold; color: #111; line-height: 1.25; text-align: left; max-width: 80%; overflow: hidden;">
-                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: 15px;">${arabicName}</div>
-                        <div style="font-weight: bold; font-size: 14px;">${latinName}</div>
-                        <div style="font-size: 13px; color: #333; font-weight: bold;">${weight}</div>
+                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${15 * fontScale}px;">${arabicName}</div>
+                        <div style="font-weight: bold; font-size: ${14 * fontScale}px;">${latinName}</div>
+                        <div style="font-size: ${13 * fontScale}px; color: #333; font-weight: bold;">${weight}</div>
                     </div>
-                    <!-- اسم المحل فوق على اليمين -->
-                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: 2px 6px; font-size: 9px; font-weight: bold; color: #334155; white-space: nowrap;">
+                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
                         Nogoom Markt
                     </div>
                 </div>
 
-                <!-- صندوق السعر الملون العملاق -->
-                <div style="background-color: ${boxBgColor}; color: #ffffff; padding: 4px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; height: 75px;">
+                <div style="background-color: ${boxBgColor} !important; color: #ffffff !important; padding: ${2 * fontScale}px ${10 * fontScale}px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; flex: 1 1 auto; min-height: ${30 * fontScale}px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <div style="display: flex; flex-direction: column; justify-content: center;">
-                        ${oldPriceNum ? `<span style="font-size: 16px; text-decoration: line-through; color: #fca5a5; font-weight: bold;">${oldPriceNum} €</span>` : ''}
+                        ${oldPriceNum ? `<span style="font-size: ${14 * fontScale}px; text-decoration: line-through; color: #fca5a5; font-weight: bold;" dir="ltr">${oldPriceNum} €</span>` : ''}
                     </div>
-                    <div style="font-size: 44px; font-weight: bold; letter-spacing: -1px; line-height: 1;">
-                        ${mainPriceNum} €
+                    <div style="font-size: ${38 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff;" dir="ltr">
+                        ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${24 * fontScale}px; color: #ffffff;">€</span>` : ''}
                     </div>
                 </div>
 
-                <!-- القسم السفلي: سعر الكيلو/اللتر + الباركود -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 35px; position: relative;">
-                    <div style="font-size: 11px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 2px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex: 0 0 auto; margin-top: ${2 * fontScale}px; height: ${26 * fontScale}px; position: relative;">
+                    <div style="font-size: ${10 * fontScale}px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 1px;">
                         ${grundpreisText}
                     </div>
-                    <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
-                        <svg id="barcode-${index}" style="max-height: 30px; width: auto;"></svg>
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center; height: 100%;">
+                        <svg id="barcode-${index}" style="max-height: 100%; width: auto;"></svg>
                     </div>
                 </div>
             `;
@@ -402,8 +463,8 @@
                         JsBarcode(`#barcode-${index}`, String(barcode), {
                             format: "CODE128",
                             displayValue: true,
-                            fontSize: 10,
-                            height: 24,
+                            fontSize: 10 * fontScale,
+                            height: 22 * fontScale,
                             margin: 0
                         });
                     }
@@ -415,7 +476,7 @@
 
         setTimeout(() => {
             window.print();
-        }, 500);
+        }, 800);
     });
 </script>
 
