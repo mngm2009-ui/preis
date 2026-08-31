@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - نظام الأقواس والماركات</title>
+    <title>مولد ملصقات نجوم ماركت - المترجم الذكي</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -122,13 +122,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث الماركات بين الأقواس)</h1>
+    <h1>مولد ملصقات نجوم ماركت (المترجم الاحترافي للبهارات)</h1>
     
     <div class="info-box">
-        <strong>القاعدة الجديدة للترجمة:</strong>
+        <strong>نظام الترجمة الجديد:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li><strong>ما خارج الأقواس:</strong> يترجم حرفياً للألماني (مثل: سجق تركي ➔ Sucuk Türkisch).</li>
-            <li><strong>ما داخل الأقواس ( ):</strong> يتم استبدال حروفه فقط بأحرف إنجليزية ويبقى كاسم ماركة (مثل: ايجي تورك ➔ Aiji Twrk).</li>
+            <li><strong>المادة:</strong> تُترجم حرفياً للألماني (تمت إضافة مكتبة ضخمة للبهارات والمواد).</li>
+            <li><strong>الماركة:</strong> أي شيء بين الأقواس `( )` تتحول حروفه للاتينية فقط ويظهر بين القوسين.</li>
         </ol>
     </div>
 
@@ -166,15 +166,59 @@
 <script>
     let excelData = [];
     
-    // قاموس الترجمة الألماني الدقيق للمواد
+    // قاموس الترجمة الألماني الدقيق والشامل (يتم استبدال العبارات الأطول أولاً)
     const exactTranslations = {
-        'زيت زيتون': 'Olivenöl', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
+        'سبع بهارات مشكلة': 'Sieben Gewürze (Baharat)',
+        'بهارات الدجاج': 'Hähnchengewürz',
+        'بهارات الشاورما': 'Shawarma Gewürz',
+        'بهارات شاورما دجاج': 'Hähnchen-Shawarma Gewürz',
+        'بهارات شاورما اللحم': 'Fleisch-Shawarma Gewürz',
+        'بهارات اللحم المشوي': 'Grillfleisch Gewürz',
+        'بهارات شيش طاووق': 'Shish Taouk Gewürz',
+        'بهارات البرغر': 'Burger Gewürz',
+        'بهارات السمك': 'Fischgewürz',
+        'بهارات كاري حار': 'Scharfes Currypulver',
+        'بهارات كاري': 'Currypulver',
+        'بابريكا مطحونة': 'Paprikapulver',
+        'فلفل أبيض مطحون': 'Weißer Pfeffer gemahlen',
+        'شطة حارة مطحونة': 'Scharfes Chilipulver',
+        'ورق الغار': 'Lorbeerblätter',
+        'الرند': 'Lorbeerblätter',
+        'خميرة فورية ناعمة': 'Trockenhefe',
+        'إكليل الجبل': 'Rosmarin',
+        'أوريغانو مجفف': 'Getrockneter Oregano',
+        'زعتر بري': 'Wilder Thymian (Oregano)',
+        'كربونات الصوديوم': 'Natron',
+        'لومي مجفف': 'Getrocknete Limette (Loomi)',
+        'ليمون مطحون': 'Gemahlene Limette (Loomi)',
+        'يانسون مطحون': 'Gemahlener Anis',
+        'يانسون حب': 'Aniskörner',
+        'بصل مطحون': 'Zwiebelpulver',
+        'ثوم مطحون': 'Knoblauchpulver',
+        'كزبرة حب': 'Korianderkörner',
+        'كزبرة مطحونة': 'Koriander gemahlen',
+        'فلفل أسود': 'Schwarzer Pfeffer',
+        'فلفل أحمر': 'Roter Pfeffer',
+        'كمون مطحون': 'Kreuzkümmel gemahlen',
+        'كمون حب': 'Kreuzkümmelkörner',
+        'كركم مطحون': 'Kurkuma gemahlen',
+        'هيل مطحون': 'Kardamom gemahlen',
+        'هيل حب': 'Kardamomkörner',
+        'قرنفل مطحون': 'Nelken gemahlen',
+        'قرنفل حب': 'Nelken',
+        'زنجبيل مطحون': 'Ingwerpulver',
+        'سماق': 'Sumach',
+        'جوزة الطيب': 'Muskatnuss',
+        'بهارات': 'Gewürze',
+        'دبس رمان': 'Granatapfelsirup',
+        'معجون طماطم': 'Tomatenmark',
+        'زيت زيتون': 'Olivenöl',
         'قهوه': 'Kaffee', 'قهوة': 'Kaffee', 'بن': 'Kaffee', 'شاي': 'Tee',
         'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنه': 'Käse', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
         'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft',
         'بسكويت': 'Kekse', 'شيبس': 'Chips', 'رز': 'Reis', 'أرز': 'Reis',
         'مخلل': 'Eingelegtes', 'طحينة': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
-        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul', 'بهارات': 'Gewürze',
+        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul',
         'سردين': 'Sardinen', 'تونة': 'Thunfisch', 'ملوخية': 'Molokhia', 'لبنه': 'Labneh', 'لبنة': 'Labneh',
         'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'قشطة': 'Kashta (Rahm)',
         'باميه': 'Okra', 'بامية': 'Okra', 'بازله': 'Erbsen', 'بازلاء': 'Erbsen', 'بازيلاء': 'Erbsen',
@@ -185,8 +229,9 @@
         'تركي': 'Türkisch', 'تركيه': 'Türkisch', 'تركية': 'Türkisch', 'عربي': 'Arabisch', 'عربيه': 'Arabisch',
         'بيضاء': 'Weiß', 'شلل': 'Flechtkäse', 'مشلله': 'Flechtkäse', 'سمنه': 'Ghee', 'سمنة': 'Ghee',
         'زيرو': 'Zero', 'خضراء': 'Grün', 'خضرا': 'Grün', 'جزر': 'Karotten', 'وجزر': 'und Karotten',
-        'اكسترا': 'Extra', 'حب': 'Ganz', 'حبة': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'خشن': 'Grob',
-        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll', 'دسم': 'Fett'
+        'اكسترا': 'Extra', 'حب': 'Ganz', 'حبة': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'ناعمة': 'Fein', 'خشن': 'Grob',
+        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حارة': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll', 'دسم': 'Fett',
+        'مطحون': 'Gemahlen', 'مطحونة': 'Gemahlen', 'مجفف': 'Getrocknet', 'مجففة': 'Getrocknet', 'فوريه': 'Instant', 'فورية': 'Instant'
     };
 
     // خريطة تحويل الحروف للماركات
@@ -210,70 +255,57 @@
         }
     });
 
+    // ترتيب القاموس من الكلمات الأطول إلى الأقصر (لكي يترجم العبارة كاملة قبل الكلمات المفردة)
+    const sortedTranslationKeys = Object.keys(exactTranslations).sort((a, b) => b.length - a.length);
+
     // دالة تحويل الحروف للماركة
-    function transliterate(word) {
-        let latinWord = '';
-        for (let j = 0; j < word.length; j++) {
-            let char = word[j];
+    function transliterate(text) {
+        let latinText = '';
+        for (let j = 0; j < text.length; j++) {
+            let char = text[j];
             if (/[\u0600-\u06FF]/.test(char)) {
-                latinWord += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
+                latinText += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
             } else {
-                latinWord += char;
+                latinText += char;
             }
         }
-        return latinWord;
+        return latinText;
     }
 
-    // دالة الترجمة الرئيسية المبنية على الأقواس
+    // الترجمة الاحترافية
     function generateGermanName(arabicName) {
         if(!arabicName) return "Orientalische Produkte";
         
-        // 1. استخراج الماركة (ما بين الأقواس)
+        // 1. فصل الماركة (ما بين الأقواس)
         let brandMatch = arabicName.match(/\(([^)]+)\)/);
         let brandArabic = brandMatch ? brandMatch[1].trim() : "";
         
-        // 2. استخراج المادة (ما خارج الأقواس)
+        // 2. فصل المادة (ما خارج الأقواس)
         let materialArabic = arabicName.replace(/\([^)]+\)/g, '').trim();
 
-        // 3. ترجمة المادة للألماني
-        let words = materialArabic.split(/\s+/);
-        let translatedWords = [];
-
-        for (let i = 0; i < words.length; i++) {
-            let word = words[i];
-            if(!word) continue;
-            
-            // تحقق من الكلمات المركبة أولاً
-            if (i < words.length - 1) {
-                let pair = word + ' ' + words[i+1];
-                if (exactTranslations[pair]) {
-                    translatedWords.push(exactTranslations[pair]);
-                    i++; 
-                    continue;
-                }
-            }
-            
-            // الكلمة المفردة
-            if (exactTranslations[word]) {
-                translatedWords.push(exactTranslations[word]);
-            } else {
-                // إذا لم يجدها في القاموس، يحول حروفها كحل بديل
-                translatedWords.push(transliterate(word));
+        // 3. ترجمة المادة (باستبدال العبارات الأطول أولاً)
+        let processedMaterial = materialArabic;
+        for (let key of sortedTranslationKeys) {
+            if (processedMaterial.includes(key)) {
+                let regex = new RegExp(key, 'g');
+                processedMaterial = processedMaterial.replace(regex, exactTranslations[key]);
             }
         }
         
-        let finalMaterial = translatedWords.join(' ').replace(/\s+/g, ' ').trim();
+        // 4. إذا تبقى أحرف عربية في المادة، نقوم بنقحرتها كحل أخير
+        let finalMaterial = transliterate(processedMaterial);
         
-        // 4. نقحرة الماركة
+        // 5. نقحرة الماركة
         let finalBrand = brandArabic ? transliterate(brandArabic) : "";
 
-        // 5. دمجهم معاً (المادة + الماركة بين قوسين)
+        // 6. دمجهم معاً
         let result = finalMaterial;
         if (finalBrand) {
             result += ` (${finalBrand})`;
         }
         
-        // تكبير أول حرف من كل كلمة
+        // تحسين الشكل: إزالة المسافات الزائدة وتكبير أول حرف
+        result = result.replace(/\s+/g, ' ').trim();
         let formattedResult = result.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
         return formattedResult || "Orientalische Produkte";
@@ -475,6 +507,7 @@
             let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || '';
             let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || '';
             
+            // الترجمة الاحترافية مع فصل الماركة
             let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
             const weight = formatWeight(weightRaw);
@@ -495,9 +528,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${3 * fontScale}px;">
                     <div style="font-weight: bold; color: #111; text-align: left; max-width: 65%;">
                         <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${13 * fontScale}px; line-height: 1.1;">${arabicName}</div>
-                        <!-- تم ضبط الاسم اللاتيني لليسار LTR حتى تظهر الأقواس بشكل صحيح -->
                         <div style="font-weight: bold; font-size: ${12 * fontScale}px; direction: ltr; text-align: left; line-height: 1.1; margin-top: 2px;">${latinName}</div>
-                        <!-- تم ضبط الوزن لليسار LTR لحل مشكلة g 750 المقلوبة -->
                         <div style="font-size: ${11 * fontScale}px; color: #333; font-weight: bold; direction: ltr; text-align: left; margin-top: 2px;">${weight}</div>
                     </div>
                     
