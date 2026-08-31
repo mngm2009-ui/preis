@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - السعر الكبير المتمركز</title>
+    <title>مولد ملصقات نجوم ماركت - التحديث الشامل</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -122,14 +122,14 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث السعر)</h1>
+    <h1>مولد ملصقات نجوم ماركت (نقل سعر الكيلو)</h1>
     
     <div class="info-box">
-        <strong>الميزات الجديدة:</strong>
+        <strong>تم التحديث بنجاح:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تم تكبير السعر للضعف وأصبح في منتصف الصندوق الأسود تماماً.</li>
-            <li>تم حل مشكلة اختفاء السعر عند الطباعة بشكل نهائي.</li>
-            <li>الأوزان والترجمة وتناسق المقاسات تعمل جميعها بكفاءة.</li>
+            <li>تم نقل سعر الكيلو (Grundpreis) ليكون تحت اسم الماركت مباشرة.</li>
+            <li>تم توسيط الباركود في الأسفل بشكل أنيق جداً.</li>
+            <li>السعر الرئيسي ما زال كبيراً ومتمركزاً في منتصف المربع الأسود.</li>
         </ol>
     </div>
 
@@ -325,10 +325,11 @@
         return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
     }
 
+    // معادلة حساب سعر الكيلو المحسنة
     function calculateGrundpreis(priceStr, weightStr) {
         if (!priceStr || !weightStr) return '';
         let cleanPrice = parseFloat(String(priceStr).replace(/[^\d.,]/g, '').replace(',', '.'));
-        if (isNaN(cleanPrice)) return '';
+        if (isNaN(cleanPrice) || cleanPrice === 0) return '';
         
         let wLower = String(weightStr).toLowerCase().trim();
         if (wLower.includes('stk')) return ''; 
@@ -336,16 +337,15 @@
         let numMatch = wLower.match(/([\d.,]+)/);
         if (!numMatch) return '';
         let val = parseFloat(numMatch[1].replace(',', '.'));
-        
-        let unit = '';
-        if (wLower.includes('kg')) unit = 'kg';
-        else if (wLower.includes('g')) unit = 'g';
-        else if (wLower.includes('ml')) unit = 'ml';
-        else if (wLower.includes('l')) unit = 'l';
-        else return '';
-
         if (isNaN(val) || val === 0) return '';
         
+        let unit = '';
+        if (wLower.includes('kg') || wLower.includes('كيلو')) unit = 'kg';
+        else if (wLower.includes('g') || wLower.includes('gr') || wLower.includes('غ')) unit = 'g';
+        else if (wLower.includes('ml') || wLower.includes('مل')) unit = 'ml';
+        else if (wLower.includes('l') || wLower.includes('لتر')) unit = 'l';
+        else return '';
+
         let totalKgOrL = 0;
         let targetUnit = 'Kg';
         
@@ -464,32 +464,32 @@
 
             let contentHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${3 * fontScale}px;">
-                    <div style="font-weight: bold; color: #111; text-align: left; max-width: 80%;">
+                    <div style="font-weight: bold; color: #111; text-align: left; max-width: 65%;">
                         <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${13 * fontScale}px; line-height: 1.1;">${arabicName}</div>
                         <div style="font-weight: bold; font-size: ${12 * fontScale}px; direction: ltr; text-align: left; line-height: 1.1; margin-top: 2px;">${latinName}</div>
                         <div style="font-size: ${11 * fontScale}px; color: #333; font-weight: bold; direction: ltr; text-align: left; margin-top: 2px;">${weight}</div>
                     </div>
-                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
-                        Nogoom Markt
+                    
+                    <!-- تم دمج اسم الماركت وسعر الكيلو في نفس العمود الأيسر -->
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
+                            Nogoom Markt
+                        </div>
+                        ${grundpreisText ? `<div style="font-size: ${9 * fontScale}px; color: #475569; font-weight: bold; direction: ltr; white-space: nowrap;">${grundpreisText}</div>` : ''}
                     </div>
                 </div>
 
-                <!-- تم تكبير ارتفاع الصندوق وتوسيط السعر بداخله -->
+                <!-- المربع الأسود ثابت الارتفاع والسعر بداخله ضخم ومتمركز -->
                 <div style="position: relative; background-color: ${boxBgColor} !important; color: #ffffff !important; padding: 0; display: flex; justify-content: center; align-items: center; border-radius: 4px; flex: 0 0 calc(48px * ${fontScale}); height: calc(48px * ${fontScale}); overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-                    
-                    <!-- السعر القديم (إن وجد) يظهر على اليسار -->
                     ${oldPriceNum ? `<div style="position: absolute; left: ${8 * fontScale}px; font-size: ${16 * fontScale}px; text-decoration: line-through; color: #fca5a5; font-weight: bold;" dir="ltr">${oldPriceNum} €</div>` : ''}
                     
-                    <!-- السعر الأساسي متمركز وكبير جداً -->
                     <div style="font-size: ${48 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff !important;" dir="ltr">
                         ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${28 * fontScale}px; color: #ffffff !important;">€</span>` : ''}
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex: 0 0 auto; margin-top: ${3 * fontScale}px; height: ${24 * fontScale}px; position: relative;">
-                    <div style="font-size: ${10 * fontScale}px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 1px; direction: ltr;">
-                        ${grundpreisText}
-                    </div>
+                <!-- الباركود في الأسفل وأصبح متمركزاً الآن -->
+                <div style="display: flex; justify-content: center; align-items: center; flex: 0 0 auto; margin-top: ${3 * fontScale}px; height: ${24 * fontScale}px; overflow: hidden;">
                     <div style="width: 100%; display: flex; justify-content: center; align-items: center; height: 100%;">
                         <svg id="barcode-${index}" style="max-height: 100%; width: auto;"></svg>
                     </div>
