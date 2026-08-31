@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - النسخة النهائية</title>
+    <title>مولد ملصقات نجوم ماركت - التحديث الذهبي</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -122,14 +122,14 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث الترجمة الدقيقة)</h1>
+    <h1>مولد ملصقات نجوم ماركت (تحديث الترجمة والأحجام)</h1>
     
     <div class="info-box">
-        <strong>تمت معالجة الأخطاء التالية بنجاح:</strong>
+        <strong>تمت المعالجة:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تم حل مشكلة الترجمة الخاطئة (مثل تحول كلمة جبنة إلى JKaffeeh).</li>
-            <li>تم إصلاح اتجاه الأسماء اللاتينية التي تحتوي على أقواس لتظهر بشكل مستقيم.</li>
-            <li>تم تفعيل إظهار سعر الكيلو (Grundpreis) في الزاوية السفلية اليسرى للبطاقات.</li>
+            <li>تمت إضافة مصطلحات (مجمد، مقشور، باميه، زيرو، الخ) للقاموس الألماني.</li>
+            <li>صندوق السعر أصبح <strong>ثابت الحجم تماماً</strong> ولن يصغر أبداً.</li>
+            <li>تم حل مشكلة قلب الأوزان (g 750) وأصبح سعر الكيلو يظهر بشكل مثالي.</li>
         </ol>
     </div>
 
@@ -140,13 +140,13 @@
 
     <div class="dimensions-grid">
         <div class="form-group">
-            <label>مقاس البطاقة (عدد لكل صفحة):</label>
+            <label>مقاس البطاقة:</label>
             <select id="cardSizeSelect">
                 <option value="7,4.5" selected>الأساسي (7 × 4.5 سم)</option>
-                <option value="19,13.5">مقاس A5 (2 بطاقة في الصفحة)</option>
-                <option value="9.5,13.5">مقاس A6 (4 بطاقات في الصفحة)</option>
-                <option value="9.5,6.5">مقاس A7 (8 بطاقات في الصفحة)</option>
-                <option value="custom">مقاس مخصص (تعديل يدوي)</option>
+                <option value="19,13.5">مقاس A5</option>
+                <option value="9.5,13.5">مقاس A6</option>
+                <option value="9.5,6.5">مقاس A7</option>
+                <option value="custom">مقاس مخصص</option>
             </select>
         </div>
         <div class="form-group">
@@ -167,7 +167,7 @@
 <script>
     let excelData = [];
     
-    // قاموس الترجمة (مبني على المطابقة الكاملة للكلمة لمنع الأخطاء)
+    // القاموس الشامل (مضاف إليه الصفات والمواد الغذائية)
     const exactTranslations = {
         'زيت زيتون': 'Olivenöl', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
         'قهوه': 'Kaffee', 'قهوة': 'Kaffee', 'بن': 'Kaffee', 'حسيب': 'Haseeb',
@@ -178,9 +178,15 @@
         'مخلل': 'Eingelegtes', 'طحينة': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
         'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul', 'بهارات': 'Gewürze',
         'سردين': 'Sardinen', 'تونة': 'Thunfisch', 'ملوخية': 'Molokhia', 'لبنه': 'Labneh', 'لبنة': 'Labneh',
-        'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'قشطة': 'Kashta (Rahm)', 'باميه': 'Okra', 'بامية': 'Okra',
-        'بازله': 'Erbsen', 'بازلاء': 'Erbsen', 'فاصوليه': 'Bohnen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'كنافة': 'Kunafa',
-        'عجين': 'Teig', 'رقايق': 'Teigblätter'
+        'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'قشطة': 'Kashta (Rahm)',
+        'باميه': 'Okra', 'بامية': 'Okra', 'بازله': 'Erbsen', 'بازلاء': 'Erbsen', 'بازيلاء': 'Erbsen',
+        'فاصوليه': 'Bohnen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'كنافة': 'Kunafa',
+        'عجين': 'Teig', 'رقايق': 'Teigblätter',
+        'مجمد': 'Tiefgefroren', 'مجمده': 'Tiefgefroren', 'مجمدة': 'Tiefgefroren',
+        'مقشور': 'Geschält', 'مقشورة': 'Geschält', 'مقشورين': 'Geschält',
+        'زيرو': 'Zero', 'خضراء': 'Grün', 'خضرا': 'Grün', 'جزر': 'Karotten',
+        'حب': 'Ganz', 'حبة': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'خشن': 'Grob',
+        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll', 'دسم': 'Fett'
     };
 
     const arabicToLatinMap = {
@@ -206,7 +212,6 @@
     function generateGermanName(arabicName) {
         if(!arabicName) return "Orientalische Produkte";
         
-        // إزالة الأقواس لتجنب مشاكل الاتجاه
         let cleanName = arabicName.replace(/[()]/g, '');
         let words = cleanName.split(/\s+/);
         let translatedWords = [];
@@ -214,21 +219,21 @@
         for (let i = 0; i < words.length; i++) {
             let word = words[i];
             
-            // محاولة ترجمة أزواج الكلمات (مثل "زيت زيتون")
+            // تحقق من الكلمات المركبة (زيت زيتون)
             if (i < words.length - 1) {
                 let pair = word + ' ' + words[i+1];
                 if (exactTranslations[pair]) {
                     translatedWords.push(exactTranslations[pair]);
-                    i++; // تجاوز الكلمة التالية لأنها تُرجمت ضمن الزوج
+                    i++; 
                     continue;
                 }
             }
             
-            // ترجمة الكلمة المفردة
+            // تحقق من الكلمة المفردة
             if (exactTranslations[word]) {
                 translatedWords.push(exactTranslations[word]);
             } else {
-                // النقحرة (Transliteration) للكلمات غير المعروفة
+                // نقحرة لأسماء الماركات (مثل: ايجيتورك، نسمه)
                 let latinWord = '';
                 for (let j = 0; j < word.length; j++) {
                     let char = word[j];
@@ -310,7 +315,7 @@
         if (isStuck) return `${num} Stk`;
         let unit = 'g';
         let lower = western.toLowerCase();
-        if (lower.includes('كيلو') || lower.includes('kg')) unit = 'Kg';
+        if (lower.includes('كيلو') || lower.includes('kg')) unit = 'kg';
         else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) unit = 'g';
         else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) unit = 'L';
         else if (lower.includes('مل') || lower.includes('ml')) unit = 'ml';
@@ -324,7 +329,7 @@
         return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
     }
 
-    // حساب سعر الكيلو أو اللتر بشكل دقيق جداً
+    // معادلة حساب السعر الدقيقة المقاومة للكلمات المقلوبة
     function calculateGrundpreis(priceStr, weightStr) {
         if (!priceStr || !weightStr) return '';
         let cleanPrice = parseFloat(String(priceStr).replace(/[^\d.,]/g, '').replace(',', '.'));
@@ -333,11 +338,18 @@
         let wLower = String(weightStr).toLowerCase().trim();
         if (wLower.includes('stk')) return ''; 
         
-        let match = wLower.match(/([\d.,]+)\s*(g|kg|ml|l)/);
-        if (!match) return '';
+        // استخراج الرقم والوحدة كل على حدة
+        let numMatch = wLower.match(/([\d.,]+)/);
+        if (!numMatch) return '';
+        let val = parseFloat(numMatch[1].replace(',', '.'));
         
-        let val = parseFloat(match[1].replace(',', '.'));
-        let unit = match[2];
+        let unit = '';
+        if (wLower.includes('kg')) unit = 'kg';
+        else if (wLower.includes('g')) unit = 'g';
+        else if (wLower.includes('ml')) unit = 'ml';
+        else if (wLower.includes('l')) unit = 'l';
+        else return '';
+
         if (isNaN(val) || val === 0) return '';
         
         let totalKgOrL = 0;
@@ -416,7 +428,7 @@
                     border: 1px dashed #cbd5e1; 
                     display: flex;
                     flex-direction: column;
-                    justify-content: space-between;
+                    justify-content: space-between; /* يحافظ على التوزيع العمودي */
                     padding: ${3 * fontScale}mm ${4 * fontScale}mm;
                     background: #fff;
                 }
@@ -453,31 +465,35 @@
             const ticketDiv = document.createElement('div');
             ticketDiv.className = 'ticket-box';
 
+            const isLarge = tw_cm > 10;
+            const fontScale = isLarge ? 1.5 : 1;
+
+            // صندوق السعر تم تثبيت ارتفاعه بمرونة صلبة (flex: 0 0 ...) لكي لا ينهار
             let contentHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 0 0 auto; margin-bottom: ${2 * fontScale}px;">
-                    <div style="font-weight: bold; color: #111; line-height: 1.25; text-align: left; max-width: 80%; overflow: hidden;">
-                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${15 * fontScale}px;">${arabicName}</div>
-                        <!-- تم ضبط اتجاه الاسم اللاتيني لليسار LTR لحل مشكلة الأقواس -->
-                        <div style="font-weight: bold; font-size: ${14 * fontScale}px; direction: ltr; text-align: left;">${latinName}</div>
-                        <div style="font-size: ${13 * fontScale}px; color: #333; font-weight: bold;">${weight}</div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${2 * fontScale}px;">
+                    <div style="font-weight: bold; color: #111; text-align: left; max-width: 80%;">
+                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${14 * fontScale}px; line-height: 1.1;">${arabicName}</div>
+                        <div style="font-weight: bold; font-size: ${13 * fontScale}px; direction: ltr; text-align: left; line-height: 1.1; margin-top: 2px;">${latinName}</div>
+                        <!-- تم ضبط اتجاه الوزن LTR لكي يظهر 750 g بشكل صحيح دائماً -->
+                        <div style="font-size: ${12 * fontScale}px; color: #333; font-weight: bold; direction: ltr; text-align: left; margin-top: 2px;">${weight}</div>
                     </div>
                     <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
                         Nogoom Markt
                     </div>
                 </div>
 
-                <div style="background-color: ${boxBgColor} !important; color: #ffffff !important; padding: ${2 * fontScale}px ${10 * fontScale}px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; flex: 1 1 auto; min-height: ${30 * fontScale}px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                <!-- صندوق السعر مقفول الحجم تماماً لمنع الانكماش -->
+                <div style="background-color: ${boxBgColor} !important; color: #ffffff !important; padding: 0 ${10 * fontScale}px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; flex: 0 0 calc(32px * ${fontScale}); height: calc(32px * ${fontScale}); -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                     <div style="display: flex; flex-direction: column; justify-content: center;">
                         ${oldPriceNum ? `<span style="font-size: ${14 * fontScale}px; text-decoration: line-through; color: #fca5a5; font-weight: bold;" dir="ltr">${oldPriceNum} €</span>` : ''}
                     </div>
-                    <div style="font-size: ${38 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff;" dir="ltr">
-                        ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${24 * fontScale}px; color: #ffffff;">€</span>` : ''}
+                    <div style="font-size: ${36 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff;" dir="ltr">
+                        ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${22 * fontScale}px; color: #ffffff;">€</span>` : ''}
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex: 0 0 auto; margin-top: ${2 * fontScale}px; height: ${26 * fontScale}px; position: relative;">
-                    <!-- سعر الكيلو تم تفعيله وضبط مكانه -->
-                    <div style="font-size: ${10 * fontScale}px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 1px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; flex: 0 0 auto; margin-top: ${2 * fontScale}px; height: ${24 * fontScale}px; position: relative;">
+                    <div style="font-size: ${10 * fontScale}px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 1px; direction: ltr;">
                         ${grundpreisText}
                     </div>
                     <div style="width: 100%; display: flex; justify-content: center; align-items: center; height: 100%;">
@@ -496,7 +512,7 @@
                             format: "CODE128",
                             displayValue: true,
                             fontSize: 10 * fontScale,
-                            height: 22 * fontScale,
+                            height: 20 * fontScale,
                             margin: 0
                         });
                     }
