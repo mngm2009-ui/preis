@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - المقاسات الذكية</title>
+    <title>مولد ملصقات نجوم ماركت - النسخة النهائية</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -23,7 +23,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-print-color-adjust: exact !important; /* إجبار المتصفح على طباعة الألوان */
+            -webkit-print-color-adjust: exact !important; 
             print-color-adjust: exact !important;
         }
 
@@ -101,19 +101,15 @@
         }
 
         .info-box {
-            background: #fff3cd;
-            color: #856404;
+            background: #e0f2fe;
+            color: #0369a1;
             padding: 12px;
             border-radius: 8px;
             font-size: 13px;
             margin-bottom: 20px;
             line-height: 1.6;
-            border: 1px solid #ffeeba;
         }
 
-        .info-box strong { color: #d32f2f; }
-
-        /* إعدادات الطباعة الأساسية */
         #printArea { display: none; }
 
         @media print {
@@ -126,11 +122,15 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث القياسات الذكية)</h1>
+    <h1>مولد ملصقات نجوم ماركت (تحديث الترجمة الدقيقة)</h1>
     
     <div class="info-box">
-        <strong>⚠️ خطوة مهمة جداً لظهور لون السعر:</strong><br>
-        عندما تفتح لك شاشة الطباعة، ابحث عن <strong>"مزيد من الإعدادات" (More settings)</strong>، وضع علامة صح (✔️) بجانب <strong>"رسومات الخلفية" (Background graphics)</strong>.
+        <strong>تمت معالجة الأخطاء التالية بنجاح:</strong>
+        <ol style="margin-right: 20px; margin-top: 5px;">
+            <li>تم حل مشكلة الترجمة الخاطئة (مثل تحول كلمة جبنة إلى JKaffeeh).</li>
+            <li>تم إصلاح اتجاه الأسماء اللاتينية التي تحتوي على أقواس لتظهر بشكل مستقيم.</li>
+            <li>تم تفعيل إظهار سعر الكيلو (Grundpreis) في الزاوية السفلية اليسرى للبطاقات.</li>
+        </ol>
     </div>
 
     <div class="form-group">
@@ -167,17 +167,20 @@
 <script>
     let excelData = [];
     
-    // القاموس
-    const autoTranslate = {
+    // قاموس الترجمة (مبني على المطابقة الكاملة للكلمة لمنع الأخطاء)
+    const exactTranslations = {
         'زيت زيتون': 'Olivenöl', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
         'قهوه': 'Kaffee', 'قهوة': 'Kaffee', 'بن': 'Kaffee', 'حسيب': 'Haseeb',
         'اخضر': 'Grün', 'ذهبي': 'Gold', 'سائل': 'Flüssig', 'شاي': 'Tee',
-        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
+        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنه': 'Käse', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
         'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft',
         'بسكويت': 'Kekse', 'شيبس': 'Chips', 'رز': 'Reis', 'أرز': 'Reis',
         'مخلل': 'Eingelegtes', 'طحينة': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
         'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul', 'بهارات': 'Gewürze',
-        'سردين': 'Sardinen', 'تونة': 'Thunfisch', 'ملوخية': 'Molokhia'
+        'سردين': 'Sardinen', 'تونة': 'Thunfisch', 'ملوخية': 'Molokhia', 'لبنه': 'Labneh', 'لبنة': 'Labneh',
+        'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'قشطة': 'Kashta (Rahm)', 'باميه': 'Okra', 'بامية': 'Okra',
+        'بازله': 'Erbsen', 'بازلاء': 'Erbsen', 'فاصوليه': 'Bohnen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'كنافة': 'Kunafa',
+        'عجين': 'Teig', 'رقايق': 'Teigblätter'
     };
 
     const arabicToLatinMap = {
@@ -202,23 +205,46 @@
 
     function generateGermanName(arabicName) {
         if(!arabicName) return "Orientalische Produkte";
-        let nameToProcess = arabicName;
-        for (let key in autoTranslate) {
-            if (nameToProcess.includes(key)) {
-                nameToProcess = nameToProcess.replace(new RegExp(key, 'g'), autoTranslate[key]);
+        
+        // إزالة الأقواس لتجنب مشاكل الاتجاه
+        let cleanName = arabicName.replace(/[()]/g, '');
+        let words = cleanName.split(/\s+/);
+        let translatedWords = [];
+
+        for (let i = 0; i < words.length; i++) {
+            let word = words[i];
+            
+            // محاولة ترجمة أزواج الكلمات (مثل "زيت زيتون")
+            if (i < words.length - 1) {
+                let pair = word + ' ' + words[i+1];
+                if (exactTranslations[pair]) {
+                    translatedWords.push(exactTranslations[pair]);
+                    i++; // تجاوز الكلمة التالية لأنها تُرجمت ضمن الزوج
+                    continue;
+                }
             }
-        }
-        let finalResult = '';
-        for (let i = 0; i < nameToProcess.length; i++) {
-            let char = nameToProcess[i];
-            if (/[\u0600-\u06FF]/.test(char)) {
-                finalResult += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
+            
+            // ترجمة الكلمة المفردة
+            if (exactTranslations[word]) {
+                translatedWords.push(exactTranslations[word]);
             } else {
-                finalResult += char;
+                // النقحرة (Transliteration) للكلمات غير المعروفة
+                let latinWord = '';
+                for (let j = 0; j < word.length; j++) {
+                    let char = word[j];
+                    if (/[\u0600-\u06FF]/.test(char)) {
+                        latinWord += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
+                    } else {
+                        latinWord += char;
+                    }
+                }
+                if (latinWord) translatedWords.push(latinWord);
             }
         }
-        finalResult = finalResult.replace(/\s+/g, ' ').trim();
+        
+        let finalResult = translatedWords.join(' ').replace(/\s+/g, ' ').trim();
         let formattedResult = finalResult.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
         return formattedResult || "Orientalische Produkte";
     }
 
@@ -282,10 +308,10 @@
         if (!numMatch) return western; 
         let num = numMatch[0];
         if (isStuck) return `${num} Stk`;
-        let unit = 'Gr';
+        let unit = 'g';
         let lower = western.toLowerCase();
         if (lower.includes('كيلو') || lower.includes('kg')) unit = 'Kg';
-        else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) unit = 'Gr';
+        else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) unit = 'g';
         else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) unit = 'L';
         else if (lower.includes('مل') || lower.includes('ml')) unit = 'ml';
         return `${num} ${unit}`;
@@ -298,23 +324,30 @@
         return isNaN(num) ? '' : num.toFixed(2).replace('.', ',');
     }
 
+    // حساب سعر الكيلو أو اللتر بشكل دقيق جداً
     function calculateGrundpreis(priceStr, weightStr) {
         if (!priceStr || !weightStr) return '';
         let cleanPrice = parseFloat(String(priceStr).replace(/[^\d.,]/g, '').replace(',', '.'));
         if (isNaN(cleanPrice)) return '';
+        
         let wLower = String(weightStr).toLowerCase().trim();
         if (wLower.includes('stk')) return ''; 
-        let match = wLower.match(/([\d.,]+)\s*(gr|g|kg|ml|l)/);
+        
+        let match = wLower.match(/([\d.,]+)\s*(g|kg|ml|l)/);
         if (!match) return '';
+        
         let val = parseFloat(match[1].replace(',', '.'));
         let unit = match[2];
         if (isNaN(val) || val === 0) return '';
+        
         let totalKgOrL = 0;
         let targetUnit = 'Kg';
-        if (unit === 'g' || unit === 'gr') { totalKgOrL = val / 1000; targetUnit = 'Kg'; }
+        
+        if (unit === 'g') { totalKgOrL = val / 1000; targetUnit = 'Kg'; }
         else if (unit === 'kg') { totalKgOrL = val; targetUnit = 'Kg'; }
         else if (unit === 'ml') { totalKgOrL = val / 1000; targetUnit = 'L'; }
         else if (unit === 'l') { totalKgOrL = val; targetUnit = 'L'; }
+        
         if (totalKgOrL > 0) {
             let grundPrice = (cleanPrice / totalKgOrL).toFixed(2);
             return `${grundPrice.replace('.', ',')} €/${targetUnit}`;
@@ -335,10 +368,7 @@
         const tw = tw_cm * 10; 
         const th = th_cm * 10; 
 
-        // الخوارزمية الذكية لتكبير الخطوط بناءً على حجم البطاقة
-        // نأخذ أصغر نسبة تكبير (بين الطول والعرض) حتى لا تخرج النصوص عن الإطار
         const fontScale = Math.min(tw_cm / 7, th_cm / 4.5);
-
         const usableW = a4_w - (pageMargin * 2);
         const usableH = a4_h - (pageMargin * 2);
 
@@ -427,7 +457,8 @@
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 0 0 auto; margin-bottom: ${2 * fontScale}px;">
                     <div style="font-weight: bold; color: #111; line-height: 1.25; text-align: left; max-width: 80%; overflow: hidden;">
                         <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${15 * fontScale}px;">${arabicName}</div>
-                        <div style="font-weight: bold; font-size: ${14 * fontScale}px;">${latinName}</div>
+                        <!-- تم ضبط اتجاه الاسم اللاتيني لليسار LTR لحل مشكلة الأقواس -->
+                        <div style="font-weight: bold; font-size: ${14 * fontScale}px; direction: ltr; text-align: left;">${latinName}</div>
                         <div style="font-size: ${13 * fontScale}px; color: #333; font-weight: bold;">${weight}</div>
                     </div>
                     <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
@@ -445,6 +476,7 @@
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; flex: 0 0 auto; margin-top: ${2 * fontScale}px; height: ${26 * fontScale}px; position: relative;">
+                    <!-- سعر الكيلو تم تفعيله وضبط مكانه -->
                     <div style="font-size: ${10 * fontScale}px; color: #333; font-weight: bold; position: absolute; left: 0; bottom: 1px;">
                         ${grundpreisText}
                     </div>
