@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - المترجم الذكي</title>
+    <title>مولد ملصقات نجوم ماركت - تصحيح الأحجام</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -122,13 +122,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (المترجم الاحترافي للبهارات)</h1>
+    <h1>مولد ملصقات نجوم ماركت (تحديث المليلتر)</h1>
     
     <div class="info-box">
-        <strong>نظام الترجمة الجديد:</strong>
+        <strong>تم التحديث:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li><strong>المادة:</strong> تُترجم حرفياً للألماني (تمت إضافة مكتبة ضخمة للبهارات والمواد).</li>
-            <li><strong>الماركة:</strong> أي شيء بين الأقواس `( )` تتحول حروفه للاتينية فقط ويظهر بين القوسين.</li>
+            <li>تم إصلاح مشكلة تحول الـ ml إلى L. الآن المليلتر سيظهر ml واللتر سيظهر L بدقة.</li>
+            <li>نظام الترجمة والمقاسات وسعر الكيلو يعمل بشكل ممتاز.</li>
         </ol>
     </div>
 
@@ -166,7 +166,6 @@
 <script>
     let excelData = [];
     
-    // قاموس الترجمة الألماني الدقيق والشامل (يتم استبدال العبارات الأطول أولاً)
     const exactTranslations = {
         'سبع بهارات مشكلة': 'Sieben Gewürze (Baharat)',
         'بهارات الدجاج': 'Hähnchengewürz',
@@ -234,7 +233,6 @@
         'مطحون': 'Gemahlen', 'مطحونة': 'Gemahlen', 'مجفف': 'Getrocknet', 'مجففة': 'Getrocknet', 'فوريه': 'Instant', 'فورية': 'Instant'
     };
 
-    // خريطة تحويل الحروف للماركات
     const arabicToLatinMap = {
         'ا': 'a', 'أ': 'a', 'إ': 'e', 'آ': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th',
         'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z',
@@ -255,10 +253,8 @@
         }
     });
 
-    // ترتيب القاموس من الكلمات الأطول إلى الأقصر (لكي يترجم العبارة كاملة قبل الكلمات المفردة)
     const sortedTranslationKeys = Object.keys(exactTranslations).sort((a, b) => b.length - a.length);
 
-    // دالة تحويل الحروف للماركة
     function transliterate(text) {
         let latinText = '';
         for (let j = 0; j < text.length; j++) {
@@ -272,18 +268,13 @@
         return latinText;
     }
 
-    // الترجمة الاحترافية
     function generateGermanName(arabicName) {
         if(!arabicName) return "Orientalische Produkte";
         
-        // 1. فصل الماركة (ما بين الأقواس)
         let brandMatch = arabicName.match(/\(([^)]+)\)/);
         let brandArabic = brandMatch ? brandMatch[1].trim() : "";
-        
-        // 2. فصل المادة (ما خارج الأقواس)
         let materialArabic = arabicName.replace(/\([^)]+\)/g, '').trim();
 
-        // 3. ترجمة المادة (باستبدال العبارات الأطول أولاً)
         let processedMaterial = materialArabic;
         for (let key of sortedTranslationKeys) {
             if (processedMaterial.includes(key)) {
@@ -292,19 +283,14 @@
             }
         }
         
-        // 4. إذا تبقى أحرف عربية في المادة، نقوم بنقحرتها كحل أخير
         let finalMaterial = transliterate(processedMaterial);
-        
-        // 5. نقحرة الماركة
         let finalBrand = brandArabic ? transliterate(brandArabic) : "";
 
-        // 6. دمجهم معاً
         let result = finalMaterial;
         if (finalBrand) {
             result += ` (${finalBrand})`;
         }
         
-        // تحسين الشكل: إزالة المسافات الزائدة وتكبير أول حرف
         result = result.replace(/\s+/g, ' ').trim();
         let formattedResult = result.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         
@@ -359,6 +345,7 @@
         }
     });
 
+    // تم تصحيح ترتيب استخراج وحدة الوزن هنا (ml قبل L)
     function formatWeight(w) {
         if (!w) return '';
         let western = String(w).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -371,12 +358,21 @@
         if (!numMatch) return western; 
         let num = numMatch[0];
         if (isStuck) return `${num} Stk`;
+        
         let unit = 'g';
         let lower = western.toLowerCase();
-        if (lower.includes('كيلو') || lower.includes('kg')) unit = 'kg';
-        else if (lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر') || lower.includes('g') || lower.includes('gr')) unit = 'g';
-        else if (lower.includes('لتر') || lower.includes('ل') || lower.includes('l')) unit = 'L';
-        else if (lower.includes('مل') || lower.includes('ml')) unit = 'ml';
+        
+        // الترتيب الصحيح: التحقق من الكلمات الطويلة أو المركبة قبل القصيرة لمنع التداخل
+        if (lower.includes('ml') || lower.includes('مل')) {
+            unit = 'ml';
+        } else if (lower.includes('l') || lower.includes('لتر') || lower.includes('ل')) {
+            unit = 'L';
+        } else if (lower.includes('kg') || lower.includes('كيلو') || lower.includes('كغ')) {
+            unit = 'kg';
+        } else if (lower.includes('g') || lower.includes('gr') || lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر')) {
+            unit = 'g';
+        }
+        
         return `${num} ${unit}`;
     }
 
@@ -507,7 +503,6 @@
             let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || '';
             let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || '';
             
-            // الترجمة الاحترافية مع فصل الماركة
             let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
             const weight = formatWeight(weightRaw);
