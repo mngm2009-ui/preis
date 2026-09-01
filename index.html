@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - تصحيح الأحجام</title>
+    <title>مولد ملصقات نجوم ماركت - التحديد الذكي</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -110,6 +110,60 @@
             line-height: 1.6;
         }
 
+        /* تنسيق قائمة المنتجات */
+        #selectionContainer {
+            display: none;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8fafc;
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        #productList {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-left: 5px;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s;
+        }
+        
+        .product-item:hover {
+            background: #e0e7ff;
+        }
+
+        .product-item label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .product-item input[type="checkbox"], #selectAllCheckbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
         #printArea { display: none; }
 
         @media print {
@@ -122,13 +176,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث المليلتر)</h1>
+    <h1>مولد ملصقات نجوم ماركت (تحديد المنتجات)</h1>
     
     <div class="info-box">
-        <strong>تم التحديث:</strong>
+        <strong>الميزات الجديدة:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تم إصلاح مشكلة تحول الـ ml إلى L. الآن المليلتر سيظهر ml واللتر سيظهر L بدقة.</li>
-            <li>نظام الترجمة والمقاسات وسعر الكيلو يعمل بشكل ممتاز.</li>
+            <li>بإمكانك الآن اختيار منتجات معينة لطباعتها دون الحاجة لطباعة الملف بالكامل.</li>
+            <li>خطوط الملصقات (حدود البطاقة) أصبحت الآن سوداء صلبة وواضحة جداً للقص.</li>
         </ol>
     </div>
 
@@ -158,62 +212,50 @@
         </div>
     </div>
 
+    <!-- قائمة المنتجات التي ستظهر بعد رفع الملف -->
+    <div id="selectionContainer">
+        <div class="list-header">
+            <strong>اختر المنتجات للطباعة:</strong>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--primary); font-weight:bold; margin:0;">
+                <input type="checkbox" id="selectAllCheckbox" checked>
+                تحديد الكل
+            </label>
+        </div>
+        <div id="productList"></div>
+    </div>
+
     <button class="btn" id="generateBtn" disabled>توليد الملصقات للطباعة / حفظ PDF</button>
 </div>
 
 <div id="printArea"></div>
 
 <script>
-    let excelData = [];
+    let parsedExcelData = []; // يخزن البيانات الأصلية بعد رفعها
     
+    // القاموس الألماني للترجمة
     const exactTranslations = {
-        'سبع بهارات مشكلة': 'Sieben Gewürze (Baharat)',
-        'بهارات الدجاج': 'Hähnchengewürz',
-        'بهارات الشاورما': 'Shawarma Gewürz',
-        'بهارات شاورما دجاج': 'Hähnchen-Shawarma Gewürz',
-        'بهارات شاورما اللحم': 'Fleisch-Shawarma Gewürz',
-        'بهارات اللحم المشوي': 'Grillfleisch Gewürz',
-        'بهارات شيش طاووق': 'Shish Taouk Gewürz',
-        'بهارات البرغر': 'Burger Gewürz',
-        'بهارات السمك': 'Fischgewürz',
-        'بهارات كاري حار': 'Scharfes Currypulver',
-        'بهارات كاري': 'Currypulver',
-        'بابريكا مطحونة': 'Paprikapulver',
-        'فلفل أبيض مطحون': 'Weißer Pfeffer gemahlen',
-        'شطة حارة مطحونة': 'Scharfes Chilipulver',
-        'ورق الغار': 'Lorbeerblätter',
-        'الرند': 'Lorbeerblätter',
-        'خميرة فورية ناعمة': 'Trockenhefe',
-        'إكليل الجبل': 'Rosmarin',
-        'أوريغانو مجفف': 'Getrockneter Oregano',
-        'زعتر بري': 'Wilder Thymian (Oregano)',
-        'كربونات الصوديوم': 'Natron',
-        'لومي مجفف': 'Getrocknete Limette (Loomi)',
-        'ليمون مطحون': 'Gemahlene Limette (Loomi)',
-        'يانسون مطحون': 'Gemahlener Anis',
-        'يانسون حب': 'Aniskörner',
-        'بصل مطحون': 'Zwiebelpulver',
-        'ثوم مطحون': 'Knoblauchpulver',
-        'كزبرة حب': 'Korianderkörner',
-        'كزبرة مطحونة': 'Koriander gemahlen',
-        'فلفل أسود': 'Schwarzer Pfeffer',
-        'فلفل أحمر': 'Roter Pfeffer',
-        'كمون مطحون': 'Kreuzkümmel gemahlen',
-        'كمون حب': 'Kreuzkümmelkörner',
-        'كركم مطحون': 'Kurkuma gemahlen',
-        'هيل مطحون': 'Kardamom gemahlen',
-        'هيل حب': 'Kardamomkörner',
-        'قرنفل مطحون': 'Nelken gemahlen',
-        'قرنفل حب': 'Nelken',
-        'زنجبيل مطحون': 'Ingwerpulver',
-        'سماق': 'Sumach',
-        'جوزة الطيب': 'Muskatnuss',
-        'بهارات': 'Gewürze',
-        'دبس رمان': 'Granatapfelsirup',
-        'معجون طماطم': 'Tomatenmark',
-        'زيت زيتون': 'Olivenöl',
-        'قهوه': 'Kaffee', 'قهوة': 'Kaffee', 'بن': 'Kaffee', 'شاي': 'Tee',
-        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنه': 'Käse', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
+        'سبع بهارات مشكلة': 'Sieben Gewürze (Baharat)', 'بهارات الدجاج': 'Hähnchengewürz',
+        'بهارات الشاورما': 'Shawarma Gewürz', 'بهارات شاورما دجاج': 'Hähnchen-Shawarma Gewürz',
+        'بهارات شاورما اللحم': 'Fleisch-Shawarma Gewürz', 'بهارات اللحم المشوي': 'Grillfleisch Gewürz',
+        'بهارات شيش طاووق': 'Shish Taouk Gewürz', 'بهارات البرغر': 'Burger Gewürz',
+        'بهارات السمك': 'Fischgewürz', 'بهارات كاري حار': 'Scharfes Currypulver',
+        'بهارات كاري': 'Currypulver', 'بابريكا مطحونة': 'Paprikapulver',
+        'فلفل أبيض مطحون': 'Weißer Pfeffer gemahlen', 'شطة حارة مطحونة': 'Scharfes Chilipulver',
+        'ورق الغار': 'Lorbeerblätter', 'الرند': 'Lorbeerblätter', 'خميرة فورية ناعمة': 'Trockenhefe',
+        'إكليل الجبل': 'Rosmarin', 'أوريغانو مجفف': 'Getrockneter Oregano', 'زعتر بري': 'Wilder Thymian (Oregano)',
+        'كربونات الصوديوم': 'Natron', 'لومي مجفف': 'Getrocknete Limette (Loomi)',
+        'ليمون مطحون': 'Gemahlene Limette (Loomi)', 'يانسون مطحون': 'Gemahlener Anis',
+        'يانسون حب': 'Aniskörner', 'بصل مطحون': 'Zwiebelpulver', 'ثوم مطحون': 'Knoblauchpulver',
+        'كزبرة حب': 'Korianderkörner', 'كزبرة مطحونة': 'Koriander gemahlen',
+        'فلفل أسود': 'Schwarzer Pfeffer', 'فلفل أحمر': 'Roter Pfeffer',
+        'كمون مطحون': 'Kreuzkümmel gemahlen', 'كمون حب': 'Kreuzkümmelkörner',
+        'كركم مطحون': 'Kurkuma gemahlen', 'هيل مطحون': 'Kardamom gemahlen',
+        'هيل حب': 'Kardamomkörner', 'قرنفل مطحون': 'Nelken gemahlen',
+        'قرنفل حب': 'Nelken', 'زنجبيل مطحون': 'Ingwerpulver', 'سماق': 'Sumach',
+        'جوزة الطيب': 'Muskatnuss', 'بهارات': 'Gewürze', 'دبس رمان': 'Granatapfelsirup',
+        'معجون طماطم': 'Tomatenmark', 'زيت زيتون': 'Olivenöl', 'قهوه': 'Kaffee', 
+        'قهوة': 'Kaffee', 'بن': 'Kaffee', 'شاي': 'Tee', 'زيت': 'Öl', 'زيتون': 'Oliven', 
+        'جبنه': 'Käse', 'جبنة': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
         'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft',
         'بسكويت': 'Kekse', 'شيبس': 'Chips', 'رز': 'Reis', 'أرز': 'Reis',
         'مخلل': 'Eingelegtes', 'طحينة': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
@@ -222,15 +264,16 @@
         'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'قشطة': 'Kashta (Rahm)',
         'باميه': 'Okra', 'بامية': 'Okra', 'بازله': 'Erbsen', 'بازلاء': 'Erbsen', 'بازيلاء': 'Erbsen',
         'فاصوليه': 'Bohnen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'كنافة': 'Kunafa',
-        'عجين': 'Teig', 'رقايق': 'Teigblätter',
-        'مجمد': 'Tiefgefroren', 'مجمده': 'Tiefgefroren', 'مجمدة': 'Tiefgefroren', 'محمد': 'Tiefgefroren',
-        'مقشور': 'Geschält', 'مقشورة': 'Geschält', 'مقشورين': 'Geschält',
-        'تركي': 'Türkisch', 'تركيه': 'Türkisch', 'تركية': 'Türkisch', 'عربي': 'Arabisch', 'عربيه': 'Arabisch',
-        'بيضاء': 'Weiß', 'شلل': 'Flechtkäse', 'مشلله': 'Flechtkäse', 'سمنه': 'Ghee', 'سمنة': 'Ghee',
-        'زيرو': 'Zero', 'خضراء': 'Grün', 'خضرا': 'Grün', 'جزر': 'Karotten', 'وجزر': 'und Karotten',
-        'اكسترا': 'Extra', 'حب': 'Ganz', 'حبة': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'ناعمة': 'Fein', 'خشن': 'Grob',
-        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حارة': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll', 'دسم': 'Fett',
-        'مطحون': 'Gemahlen', 'مطحونة': 'Gemahlen', 'مجفف': 'Getrocknet', 'مجففة': 'Getrocknet', 'فوريه': 'Instant', 'فورية': 'Instant'
+        'عجين': 'Teig', 'رقايق': 'Teigblätter', 'مجمد': 'Tiefgefroren', 'مجمده': 'Tiefgefroren', 
+        'مجمدة': 'Tiefgefroren', 'محمد': 'Tiefgefroren', 'مقشور': 'Geschält', 'مقشورة': 'Geschält', 
+        'مقشورين': 'Geschält', 'تركي': 'Türkisch', 'تركيه': 'Türkisch', 'تركية': 'Türkisch', 
+        'عربي': 'Arabisch', 'عربيه': 'Arabisch', 'بيضاء': 'Weiß', 'شلل': 'Flechtkäse', 
+        'مشلله': 'Flechtkäse', 'سمنه': 'Ghee', 'سمنة': 'Ghee', 'زيرو': 'Zero', 'خضراء': 'Grün', 
+        'خضرا': 'Grün', 'جزر': 'Karotten', 'وجزر': 'und Karotten', 'اكسترا': 'Extra', 'حب': 'Ganz', 
+        'حبة': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'ناعمة': 'Fein', 'خشن': 'Grob',
+        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حارة': 'Scharf', 'حلو': 'Süß', 
+        'كامل': 'Voll', 'دسم': 'Fett', 'مطحون': 'Gemahlen', 'مطحونة': 'Gemahlen', 
+        'مجفف': 'Getrocknet', 'مجففة': 'Getrocknet', 'فوريه': 'Instant', 'فورية': 'Instant'
     };
 
     const arabicToLatinMap = {
@@ -299,7 +342,11 @@
 
     const excelFileInput = document.getElementById('excelFile');
     const generateBtn = document.getElementById('generateBtn');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const selectionContainer = document.getElementById('selectionContainer');
+    const productList = document.getElementById('productList');
 
+    // عرض القائمة عند قراءة الملف
     excelFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -321,19 +368,22 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                excelData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                parsedExcelData = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
                 
-                if (excelData.length === 0) {
+                if (parsedExcelData.length === 0) {
                     alert('الملف فارغ أو غير صالح!');
+                    selectionContainer.style.display = 'none';
                     generateBtn.disabled = true;
                     return;
                 }
 
-                generateBtn.disabled = false;
-                alert(`تم قراءة الملف بنجاح! عدد المنتجات: ${excelData.length}`);
+                // رسم قائمة المنتجات مع صناديق الاختيار
+                renderProductList(parsedExcelData);
+
             } catch (err) {
                 console.error(err);
                 alert('حدث خطأ أثناء قراءة الملف.');
+                selectionContainer.style.display = 'none';
                 generateBtn.disabled = true;
             }
         };
@@ -345,7 +395,45 @@
         }
     });
 
-    // تم تصحيح ترتيب استخراج وحدة الوزن هنا (ml قبل L)
+    // دالة إنشاء واجهة التحديد
+    function renderProductList(data) {
+        productList.innerHTML = '';
+        selectionContainer.style.display = 'block';
+        generateBtn.disabled = false;
+        selectAllCheckbox.checked = true;
+
+        data.forEach((row, index) => {
+            let name = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || `منتج غير معروف (${index + 1})`;
+            let price = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || '';
+
+            const item = document.createElement('div');
+            item.className = 'product-item';
+            item.innerHTML = `
+                <label>
+                    <input type="checkbox" class="product-cb" value="${index}" checked>
+                    <span style="flex: 1; font-weight: bold; color: #1e293b;">${name}</span>
+                    <span style="font-weight: bold; color: #d32f2f;" dir="ltr">${price ? price + ' €' : ''}</span>
+                </label>
+            `;
+            productList.appendChild(item);
+        });
+
+        // مراقبة التغييرات لإلغاء "تحديد الكل" إذا ألغى المستخدم منتجاً واحداً
+        const checkboxes = document.querySelectorAll('.product-cb');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const allChecked = document.querySelectorAll('.product-cb:checked').length === checkboxes.length;
+                selectAllCheckbox.checked = allChecked;
+            });
+        });
+    }
+
+    // تفعيل زر "تحديد الكل"
+    selectAllCheckbox.addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('.product-cb');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+    });
+
     function formatWeight(w) {
         if (!w) return '';
         let western = String(w).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -362,16 +450,10 @@
         let unit = 'g';
         let lower = western.toLowerCase();
         
-        // الترتيب الصحيح: التحقق من الكلمات الطويلة أو المركبة قبل القصيرة لمنع التداخل
-        if (lower.includes('ml') || lower.includes('مل')) {
-            unit = 'ml';
-        } else if (lower.includes('l') || lower.includes('لتر') || lower.includes('ل')) {
-            unit = 'L';
-        } else if (lower.includes('kg') || lower.includes('كيلو') || lower.includes('كغ')) {
-            unit = 'kg';
-        } else if (lower.includes('g') || lower.includes('gr') || lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر')) {
-            unit = 'g';
-        }
+        if (lower.includes('ml') || lower.includes('مل')) unit = 'ml';
+        else if (lower.includes('l') || lower.includes('لتر') || lower.includes('ل')) unit = 'L';
+        else if (lower.includes('kg') || lower.includes('كيلو') || lower.includes('كغ')) unit = 'kg';
+        else if (lower.includes('g') || lower.includes('gr') || lower.includes('غرام') || lower.includes('جرام') || lower.includes('غ') || lower.includes('جر')) unit = 'g';
         
         return `${num} ${unit}`;
     }
@@ -419,7 +501,14 @@
     }
 
     generateBtn.addEventListener('click', () => {
-        if (excelData.length === 0) return;
+        // فلترة المنتجات التي تم اختيارها فقط بالـ Checkbox
+        const checkedBoxes = document.querySelectorAll('.product-cb:checked');
+        const selectedData = Array.from(checkedBoxes).map(cb => parsedExcelData[cb.value]);
+
+        if (selectedData.length === 0) {
+            alert('الرجاء تحديد منتج واحد على الأقل للطباعة!');
+            return;
+        }
 
         const a4_w = 210; 
         const a4_h = 297; 
@@ -450,6 +539,7 @@
             document.head.appendChild(styleEl);
         }
 
+        // تم تغيير الإطار ليكون بخط أسود صلب 2px 
         styleEl.innerHTML = `
             @media print {
                 @page { size: A4 portrait; margin: 0; }
@@ -476,7 +566,7 @@
                     height: ${th}mm;
                     box-sizing: border-box;
                     overflow: hidden;
-                    border: 1px dashed #cbd5e1; 
+                    border: 2px solid #000000; /* خط أسود صلب وواضح */
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
@@ -490,7 +580,8 @@
         printArea.innerHTML = '';
         let currentA4Page = null;
 
-        excelData.forEach((row, index) => {
+        // طباعة المنتجات المختارة فقط
+        selectedData.forEach((row, index) => {
             if (index % ticketsPerPage === 0) {
                 currentA4Page = document.createElement('div');
                 currentA4Page.className = 'print-page';
@@ -516,8 +607,7 @@
             const ticketDiv = document.createElement('div');
             ticketDiv.className = 'ticket-box';
 
-            const isLarge = tw_cm > 10;
-            const fontScale = isLarge ? 1.5 : 1;
+            const fontScale = Math.min(tw_cm / 7, th_cm / 4.5);
 
             let contentHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${3 * fontScale}px;">
