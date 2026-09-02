@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - الاحترافي</title>
+    <title>مولد ملصقات نجوم ماركت - فرز العروض</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -99,6 +99,22 @@
             background-color: #94a3b8;
             cursor: not-allowed;
         }
+        
+        .btn-offer {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-offer:hover {
+            background-color: #dc2626;
+        }
 
         .info-box {
             background: #e0f2fe;
@@ -175,13 +191,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (الترجمة الصارمة للمواد)</h1>
+    <h1>مولد ملصقات نجوم ماركت (فلترة العروض)</h1>
     
     <div class="info-box">
-        <strong>القاعدة الذكية:</strong>
+        <strong>جديد:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تمت تهيئة الكود ليقرأ ملفك الحالي بشكل مباشر (الأعمدة المخفية للوزن وعمود name/price).</li>
-            <li>تحويل الحروف يتم فقط لما هو مكتوب داخل <strong>( الأقواس )</strong> كعلامة تجارية.</li>
+            <li>أصبح بإمكانك بنقرة زر واحدة تحديد المنتجات التي تحتوي على سعر عرض فقط.</li>
+            <li>القاموس والمقاسات تعمل بشكل آلي ومثالي.</li>
         </ol>
     </div>
 
@@ -214,10 +230,13 @@
     <div id="selectionContainer">
         <div class="list-header">
             <strong>اختر المنتجات للطباعة:</strong>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--primary); font-weight:bold; margin:0;">
-                <input type="checkbox" id="selectAllCheckbox" checked>
-                تحديد الكل
-            </label>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button type="button" id="selectOffersBtn" class="btn-offer">تحديد العروض فقط</button>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--primary); font-weight:bold; margin:0;">
+                    <input type="checkbox" id="selectAllCheckbox" checked>
+                    تحديد الكل
+                </label>
+            </div>
         </div>
         <div id="productList"></div>
     </div>
@@ -230,7 +249,7 @@
 <script>
     let parsedExcelData = [];
     
-    // القاموس الألماني الشامل للترجمة الحرفية
+    // القاموس الألماني للترجمة الحرفية
     const exactTranslations = {
         'مربى الفراوله': 'Erdbeermarmelade', 'مربى الفراولة': 'Erdbeermarmelade', 'مربى المشمش': 'Aprikosenmarmelade',
         'مربى التين': 'Feigenmarmelade', 'مربى الكرز': 'Kirschmarmelade', 'مربى التوت': 'Beerenmarmelade',
@@ -378,6 +397,7 @@
     const excelFileInput = document.getElementById('excelFile');
     const generateBtn = document.getElementById('generateBtn');
     const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const selectOffersBtn = document.getElementById('selectOffersBtn');
     const selectionContainer = document.getElementById('selectionContainer');
     const productList = document.getElementById('productList');
 
@@ -435,9 +455,13 @@
         selectAllCheckbox.checked = true;
 
         data.forEach((row, index) => {
-            // إضافة دعم كامل لأعمدة ملفك (name و price)
             let name = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || `منتج غير معروف (${index + 1})`;
-            let price = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
+            let basePrice = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
+            let offerPrice = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
+            
+            // تحديد أي سعر سيُعرض في القائمة
+            let hasOffer = offerPrice !== undefined && offerPrice !== null && String(offerPrice).trim() !== "" && String(offerPrice).trim().toLowerCase() !== "nan";
+            let displayPrice = hasOffer ? `<span style="text-decoration:line-through; color:#94a3b8; font-size:11px; margin-right:5px;">${basePrice}</span> <span style="color:#d32f2f;">${offerPrice} €</span>` : `<span style="color:#1e293b;">${basePrice} €</span>`;
 
             const item = document.createElement('div');
             item.className = 'product-item';
@@ -445,7 +469,7 @@
                 <label>
                     <input type="checkbox" class="product-cb" value="${index}" checked>
                     <span style="flex: 1; font-weight: bold; color: #1e293b;">${name}</span>
-                    <span style="font-weight: bold; color: #d32f2f;" dir="ltr">${price ? price + ' €' : ''}</span>
+                    <span style="font-weight: bold;" dir="ltr">${displayPrice}</span>
                 </label>
             `;
             productList.appendChild(item);
@@ -463,6 +487,30 @@
     selectAllCheckbox.addEventListener('change', (e) => {
         const checkboxes = document.querySelectorAll('.product-cb');
         checkboxes.forEach(cb => cb.checked = e.target.checked);
+    });
+
+    // منطق زر تحديد العروض فقط
+    selectOffersBtn.addEventListener('click', () => {
+        const checkboxes = document.querySelectorAll('.product-cb');
+        let offerCount = 0;
+        
+        checkboxes.forEach(cb => {
+            const index = cb.value;
+            const row = parsedExcelData[index];
+            let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
+            
+            // نتحقق إذا كان الحقل يحتوي على عرض حقيقي
+            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim().toLowerCase() !== "nan";
+            
+            cb.checked = hasOffer;
+            if (hasOffer) offerCount++;
+        });
+        
+        selectAllCheckbox.checked = false;
+        
+        if (offerCount === 0) {
+            alert("لا يوجد أي منتجات عليها عروض في هذا الملف!");
+        }
     });
 
     function formatWeight(w) {
@@ -616,7 +664,6 @@
                 printArea.appendChild(currentA4Page);
             }
 
-            // إضافة دعم كامل لأعمدة ملفك (name, price, offer, Unnamed: 4 للوزن)
             let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || '';
             let weightRaw = row['Beschreibung'] || row['الوزن'] || row['Unnamed: 4'] || '';
             let barcode = row['Barcode'] || row['الباركود'] || row['barcode'] || '';
@@ -626,7 +673,7 @@
             let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
             const weight = formatWeight(weightRaw);
-            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim() !== "NaN" && String(offerPriceRaw).trim() !== "nan";
+            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim().toLowerCase() !== "nan";
             const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
             
             const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
