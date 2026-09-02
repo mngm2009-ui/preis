@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - القاموس الشامل</title>
+    <title>مولد ملصقات نجوم ماركت - الاحترافي</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -175,13 +175,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (المترجم الشامل)</h1>
+    <h1>مولد ملصقات نجوم ماركت (الترجمة الصارمة للمواد)</h1>
     
     <div class="info-box">
-        <strong>تم تحديث الترجمة:</strong>
+        <strong>القاعدة الذكية:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تمت إضافة أكثر من 200 كلمة سوبرماركت (مربيات، فواكه، ألبان، معلبات).</li>
-            <li>الكود الآن يحذف (الـ) من الكلمات تلقائياً لتنجح الترجمة (مثل: الفراولة ➔ فراولة ➔ Erdbeere).</li>
+            <li>تمت تهيئة الكود ليقرأ ملفك الحالي بشكل مباشر (الأعمدة المخفية للوزن وعمود name/price).</li>
+            <li>تحويل الحروف يتم فقط لما هو مكتوب داخل <strong>( الأقواس )</strong> كعلامة تجارية.</li>
         </ol>
     </div>
 
@@ -230,48 +230,46 @@
 <script>
     let parsedExcelData = [];
     
-    // القاموس الألماني الشامل
+    // القاموس الألماني الشامل للترجمة الحرفية
     const exactTranslations = {
-        // قسم المربيات والحلويات
         'مربى الفراوله': 'Erdbeermarmelade', 'مربى الفراولة': 'Erdbeermarmelade', 'مربى المشمش': 'Aprikosenmarmelade',
         'مربى التين': 'Feigenmarmelade', 'مربى الكرز': 'Kirschmarmelade', 'مربى التوت': 'Beerenmarmelade',
         'مربى': 'Marmelade', 'فراوله': 'Erdbeere', 'فراولة': 'Erdbeere', 'مشمش': 'Aprikose', 'تين': 'Feige', 
         'كرز': 'Kirsche', 'عسل': 'Honig', 'شوكولاته': 'Schokolade', 'شوكولا': 'Schokolade',
         'حلاوه': 'Halawa', 'حلاوة': 'Halawa', 'طحينيه': 'Tahini', 'طحينية': 'Tahini',
-
-        // الألبان والأجبان
-        'حليب': 'Milch', 'لبن': 'Joghurt', 'عيران': 'Ayran', 'قشطه': 'Sahne', 'قشطة': 'Sahne',
-        'زبده': 'Butter', 'زبدة': 'Butter', 'جبنه': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi', 
-        'عكاوي': 'Akkawi Käse', 'شلل': 'Flechtkäse', 'مشلله': 'Flechtkäse', 'موزاريلا': 'Mozzarella',
-
-        // اللحوم
-        'دجاج': 'Hähnchen', 'فروج': 'Hähnchen', 'لحم': 'Fleisch', 'بقر': 'Rind', 'غنم': 'Lamm', 
-        'سمك': 'Fisch', 'مرتديلا': 'Mortadella', 'سجق': 'Sucuk', 'نقانق': 'Würstchen',
-        'شاورما': 'Shawarma', 'شيش طاووق': 'Shish Taouk', 'برغر': 'Burger',
-
-        // الخضار والفواكه والبقوليات
-        'طماطم': 'Tomaten', 'بندوره': 'Tomaten', 'خيار': 'Gurke', 'بطاطا': 'Kartoffeln', 'بطاطس': 'Kartoffeln',
-        'بصل': 'Zwiebel', 'ثوم': 'Knoblauch', 'فليفله': 'Paprika', 'فلفل': 'Pfeffer', 
-        'باميه': 'Okra', 'بازلاء': 'Erbsen', 'بازله': 'Erbsen', 'فاصوليا': 'Bohnen', 'فاصوليه': 'Bohnen',
-        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'عدس': 'Linsen', 'رز': 'Reis', 'ارز': 'Reis',
-        'برغل': 'Bulgur', 'فريكه': 'Freekeh', 'مخلل': 'Eingelegtes', 'زيتون': 'Oliven',
+        'عنب': 'Trauben', 'تمر': 'Datteln', 'دبس تمر': 'Dattelsirup', 'دبس عنب': 'Traubensirup',
         
-        // المعلبات والسوائل
-        'معجون طماطم': 'Tomatenmark', 'دبس رمان': 'Granatapfelsirup', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
-        'زيت زيتون': 'Olivenöl', 'زيت': 'Öl', 'خل': 'Essig', 'سردين': 'Sardinen', 'تونه': 'Thunfisch',
-        'عصير': 'Saft', 'مشروب': 'Getränk', 'مياه': 'Wasser', 'مي': 'Wasser', 'شاي': 'Tee', 'قهوه': 'Kaffee', 'بن': 'Kaffee',
-
-        // البهارات والمخبوزات
-        'بهارات': 'Gewürze', 'ملح': 'Salz', 'سكر': 'Zucker', 'طحين': 'Mehl', 'دقيق': 'Mehl',
-        'خميره': 'Hefe', 'عجين': 'Teig', 'رقايق': 'Teigblätter', 'خبز': 'Brot', 'كنافه': 'Kunafa', 
-        'معمول': 'Maamoul', 'بسكويت': 'Kekse', 'شيبس': 'Chips', 'اندومي': 'Indomie النودلز',
-        
-        // صفات عامة
-        'مجمد': 'Tiefgefroren', 'مقشور': 'Geschält', 'تركي': 'Türkisch', 'عربي': 'Arabisch',
-        'بيضاء': 'Weiß', 'سمنه': 'Ghee', 'زيرو': 'Zero', 'خضراء': 'Grün', 'جزر': 'Karotten',
+        'سبع بهارات مشكله': 'Sieben Gewürze (Baharat)', 'بهارات الدجاج': 'Hähnchengewürz',
+        'بهارات الشاورما': 'Shawarma Gewürz', 'شاورما دجاج': 'Hähnchen-Shawarma',
+        'شاورما اللحم': 'Fleisch-Shawarma', 'اللحم المشوي': 'Grillfleisch',
+        'شيش طاووق': 'Shish Taouk', 'برغر': 'Burger', 'سمك': 'Fisch',
+        'كاري حار': 'Scharfes Curry', 'كاري': 'Curry', 'بابريكا': 'Paprika',
+        'فلفل ابيض': 'Weißer Pfeffer', 'فلفل اسود': 'Schwarzer Pfeffer', 'فلفل احمر': 'Roter Pfeffer',
+        'شطه حاره': 'Scharfes Chili', 'شطه': 'Chili', 'ورق الغار': 'Lorbeerblätter',
+        'الرند': 'Lorbeerblätter', 'خميره فوريه': 'Trockenhefe', 'خميره': 'Hefe',
+        'اكليل الجبل': 'Rosmarin', 'اوريغانو': 'Oregano', 'زعتر بري': 'Wilder Thymian',
+        'زعتر': 'Zaatar', 'كربونات الصوديوم': 'Natron', 'لومي': 'Loomi (Limette)',
+        'ليمون': 'Zitrone', 'يانسون': 'Anis', 'بصل': 'Zwiebel', 'ثوم': 'Knoblauch',
+        'كزبره': 'Koriander', 'كمون': 'Kreuzkümmel', 'كركم': 'Kurkuma', 'هيل': 'Kardamom',
+        'قرنفل': 'Nelken', 'زنجبيل': 'Ingwer', 'سماق': 'Sumach', 'جوزه الطيب': 'Muskatnuss',
+        'بهارات': 'Gewürze', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
+        'زيت زيتون': 'Olivenöl', 'قهوه': 'Kaffee', 'بن': 'Kaffee', 'شاي': 'Tee',
+        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنه': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
+        'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft', 'مشروب': 'Getränk',
+        'بسكويت': 'Kekse', 'شيبس': 'Chips', 'ارز': 'Reis', 'رز': 'Reis',
+        'مخلل': 'Eingelegtes', 'طحينه': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
+        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul',
+        'سردين': 'Sardinen', 'تونه': 'Thunfisch', 'ملوخيه': 'Molokhia', 'لبنه': 'Labneh',
+        'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'باميه': 'Okra', 'بازلاء': 'Erbsen',
+        'بازيلاء': 'Erbsen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'عجين': 'Teig',
+        'رقايق': 'Teigblätter', 'مجمد': 'Tiefgefroren', 'مقشور': 'Geschält',
+        'تركي': 'Türkisch', 'عربي': 'Arabisch', 'بيضاء': 'Weiß', 'شلل': 'Flechtkäse',
+        'سمنه': 'Ghee', 'زيرو': 'Zero', 'خضراء': 'Grün', 'جزر': 'Karotten',
         'اكسترا': 'Extra', 'حب': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'خشن': 'Grob',
         'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll',
-        'دسم': 'Fett', 'مطحون': 'Gemahlen', 'مجفف': 'Getrocknet'
+        'دسم': 'Fett', 'مطحون': 'Gemahlen', 'مجفف': 'Getrocknet', 'دجاج': 'Hähnchen',
+        'لحم': 'Fleisch', 'مياه': 'Wasser', 'طحين': 'Mehl', 'سكر': 'Zucker', 'ملح': 'Salz',
+        'مكسرات': 'Nüsse'
     };
 
     const arabicToLatinMap = {
@@ -309,7 +307,6 @@
         return latinText;
     }
 
-    // دالة لتوحيد النصوص وإزالة "ال" التعريف
     function normalizeAndStripAl(text) {
         let words = text.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').split(/\s+/);
         let cleanWords = words.map(w => {
@@ -328,16 +325,13 @@
         let brandArabic = brandMatch ? brandMatch[1].trim() : "";
         let materialArabic = arabicName.replace(/\([^)]+\)/g, '').trim();
 
-        // تجربة الترجمة الدقيقة للعبارة كاملة أولاً
         let normMaterial = normalizeAndStripAl(materialArabic);
         let translatedMaterialWords = [];
         
-        // تفكيك الجملة و ترجمة كلماتها
         let words = normMaterial.split(/\s+/);
         for(let i=0; i<words.length; i++) {
             let w = words[i];
             
-            // تحقق من الأزواج أولاً
             if(i < words.length - 1) {
                 let pair = w + ' ' + words[i+1];
                 let foundPair = false;
@@ -352,7 +346,6 @@
                 if(foundPair) continue;
             }
 
-            // تحقق من الكلمة المفردة
             let found = false;
             for (let key of sortedTranslationKeys) {
                 if (normalizeAndStripAl(key) === w) {
@@ -361,21 +354,14 @@
                     break;
                 }
             }
-            
-            // إذا لم يتم العثور على الكلمة، نتركها فارغة (لا نقوم بنقحرتها أبداً للمواد)
-            if(!found) {
-               // تجاهل
-            }
         }
 
         let finalMaterial = translatedMaterialWords.join(' ').trim();
         
-        // إذا لم نجد أي ترجمة صحيحة للمادة، نكتب اسم عام
         if (!finalMaterial) {
             finalMaterial = "Orientalische Produkte";
         }
 
-        // המاركة فقط هي التي تُنقحر
         let finalBrand = brandArabic ? transliterate(brandArabic) : "";
 
         let result = finalMaterial;
@@ -449,8 +435,9 @@
         selectAllCheckbox.checked = true;
 
         data.forEach((row, index) => {
-            let name = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || `منتج غير معروف (${index + 1})`;
-            let price = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || '';
+            // إضافة دعم كامل لأعمدة ملفك (name و price)
+            let name = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || `منتج غير معروف (${index + 1})`;
+            let price = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
 
             const item = document.createElement('div');
             item.className = 'product-item';
@@ -629,16 +616,17 @@
                 printArea.appendChild(currentA4Page);
             }
 
-            let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || '';
-            let weightRaw = row['Beschreibung'] || row['الوزن'] || '';
-            let barcode = row['Barcode'] || row['الباركود'] || '';
-            let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || '';
-            let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || '';
+            // إضافة دعم كامل لأعمدة ملفك (name, price, offer, Unnamed: 4 للوزن)
+            let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || '';
+            let weightRaw = row['Beschreibung'] || row['الوزن'] || row['Unnamed: 4'] || '';
+            let barcode = row['Barcode'] || row['الباركود'] || row['barcode'] || '';
+            let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
+            let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
             
             let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
             const weight = formatWeight(weightRaw);
-            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "";
+            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim() !== "NaN" && String(offerPriceRaw).trim() !== "nan";
             const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
             
             const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
