@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - القص المشترك (المتلاصق)</title>
+    <title>مولد ملصقات نجوم ماركت - القراءة المباشرة</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -99,7 +99,7 @@
             background-color: #94a3b8;
             cursor: not-allowed;
         }
-        
+
         .btn-offer {
             background-color: #ef4444;
             color: white;
@@ -191,13 +191,13 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث القص المشترك)</h1>
+    <h1>مولد ملصقات نجوم ماركت (الاسم الألماني من الملف)</h1>
     
     <div class="info-box">
-        <strong>جاهز للقص السريع:</strong>
+        <strong>تم إيقاف الترجمة التلقائية:</strong>
         <ol style="margin-right: 20px; margin-top: 5px;">
-            <li>تم إلغاء الفراغات بين البطاقات لتكون متلاصقة تماماً.</li>
-            <li>الحدود تم دمجها لتعطي خطاً أسوداً واحداً تمرر عليه المقص بضربة واحدة فقط!</li>
+            <li>النظام الآن يعتمد على عامود <strong>DE Name</strong> (أو الاسم اللاتيني) الموجود في ملفك مباشرة.</li>
+            <li>البرنامج أصبح أسرع بكثير في معالجة آلاف المنتجات بضغطة زر.</li>
         </ol>
     </div>
 
@@ -248,56 +248,6 @@
 
 <script>
     let parsedExcelData = [];
-    
-    // القاموس الألماني الشامل للترجمة الحرفية
-    const exactTranslations = {
-        'مربى الفراوله': 'Erdbeermarmelade', 'مربى الفراولة': 'Erdbeermarmelade', 'مربى المشمش': 'Aprikosenmarmelade',
-        'مربى التين': 'Feigenmarmelade', 'مربى الكرز': 'Kirschmarmelade', 'مربى التوت': 'Beerenmarmelade',
-        'مربى': 'Marmelade', 'فراوله': 'Erdbeere', 'فراولة': 'Erdbeere', 'مشمش': 'Aprikose', 'تين': 'Feige', 
-        'كرز': 'Kirsche', 'عسل': 'Honig', 'شوكولاته': 'Schokolade', 'شوكولا': 'Schokolade',
-        'حلاوه': 'Halawa', 'حلاوة': 'Halawa', 'طحينيه': 'Tahini', 'طحينية': 'Tahini',
-        'عنب': 'Trauben', 'تمر': 'Datteln', 'دبس تمر': 'Dattelsirup', 'دبس عنب': 'Traubensirup',
-        
-        'سبع بهارات مشكله': 'Sieben Gewürze (Baharat)', 'بهارات الدجاج': 'Hähnchengewürz',
-        'بهارات الشاورما': 'Shawarma Gewürz', 'شاورما دجاج': 'Hähnchen-Shawarma',
-        'شاورما اللحم': 'Fleisch-Shawarma', 'اللحم المشوي': 'Grillfleisch',
-        'شيش طاووق': 'Shish Taouk', 'برغر': 'Burger', 'سمك': 'Fisch',
-        'كاري حار': 'Scharfes Curry', 'كاري': 'Curry', 'بابريكا': 'Paprika',
-        'فلفل ابيض': 'Weißer Pfeffer', 'فلفل اسود': 'Schwarzer Pfeffer', 'فلفل احمر': 'Roter Pfeffer',
-        'شطه حاره': 'Scharfes Chili', 'شطه': 'Chili', 'ورق الغار': 'Lorbeerblätter',
-        'الرند': 'Lorbeerblätter', 'خميره فوريه': 'Trockenhefe', 'خميره': 'Hefe',
-        'اكليل الجبل': 'Rosmarin', 'اوريغانو': 'Oregano', 'زعتر بري': 'Wilder Thymian',
-        'زعتر': 'Zaatar', 'كربونات الصوديوم': 'Natron', 'لومي': 'Loomi (Limette)',
-        'ليمون': 'Zitrone', 'يانسون': 'Anis', 'بصل': 'Zwiebel', 'ثوم': 'Knoblauch',
-        'كزبره': 'Koriander', 'كمون': 'Kreuzkümmel', 'كركم': 'Kurkuma', 'هيل': 'Kardamom',
-        'قرنفل': 'Nelken', 'زنجبيل': 'Ingwer', 'سماق': 'Sumach', 'جوزه الطيب': 'Muskatnuss',
-        'بهارات': 'Gewürze', 'دبس رمان': 'Granatapfelsirup', 'معجون طماطم': 'Tomatenmark',
-        'زيت زيتون': 'Olivenöl', 'قهوه': 'Kaffee', 'بن': 'Kaffee', 'شاي': 'Tee',
-        'زيت': 'Öl', 'زيتون': 'Oliven', 'جبنه': 'Käse', 'جبن': 'Käse', 'حلوم': 'Halloumi',
-        'مرتديلا': 'Mortadella', 'اندومي': 'Indomie', 'عصير': 'Saft', 'مشروب': 'Getränk',
-        'بسكويت': 'Kekse', 'شيبس': 'Chips', 'ارز': 'Reis', 'رز': 'Reis',
-        'مخلل': 'Eingelegtes', 'طحينه': 'Tahini', 'دبس': 'Sirup', 'رمان': 'Granatapfel',
-        'حمص': 'Kichererbsen', 'فول': 'Fava Bohnen', 'معمول': 'Maamoul',
-        'سردين': 'Sardinen', 'تونه': 'Thunfisch', 'ملوخيه': 'Molokhia', 'لبنه': 'Labneh',
-        'سجق': 'Sucuk', 'قشطه': 'Kashta (Rahm)', 'باميه': 'Okra', 'بازلاء': 'Erbsen',
-        'بازيلاء': 'Erbsen', 'فاصوليا': 'Bohnen', 'كنافه': 'Kunafa', 'عجين': 'Teig',
-        'رقايق': 'Teigblätter', 'مجمد': 'Tiefgefroren', 'مقشور': 'Geschält',
-        'تركي': 'Türkisch', 'عربي': 'Arabisch', 'بيضاء': 'Weiß', 'شلل': 'Flechtkäse',
-        'سمنه': 'Ghee', 'زيرو': 'Zero', 'خضراء': 'Grün', 'جزر': 'Karotten',
-        'اكسترا': 'Extra', 'حب': 'Ganz', 'مفروم': 'Gehackt', 'ناعم': 'Fein', 'خشن': 'Grob',
-        'طازج': 'Frisch', 'معلب': 'In Dosen', 'حار': 'Scharf', 'حلو': 'Süß', 'كامل': 'Voll',
-        'دسم': 'Fett', 'مطحون': 'Gemahlen', 'مجفف': 'Getrocknet', 'دجاج': 'Hähnchen',
-        'لحم': 'Fleisch', 'مياه': 'Wasser', 'طحين': 'Mehl', 'سكر': 'Zucker', 'ملح': 'Salz',
-        'مكسرات': 'Nüsse'
-    };
-
-    const arabicToLatinMap = {
-        'ا': 'a', 'أ': 'a', 'إ': 'e', 'آ': 'a', 'ب': 'b', 'ت': 't', 'ث': 'th',
-        'ج': 'j', 'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'dh', 'ر': 'r', 'ز': 'z',
-        'س': 's', 'ش': 'sh', 'ص': 's', 'ض': 'd', 'ط': 't', 'ظ': 'z', 'ع': 'a',
-        'غ': 'gh', 'ف': 'f', 'ق': 'q', 'ك': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n',
-        'ه': 'h', 'ة': 'h', 'و': 'w', 'ي': 'i', 'ى': 'a', 'ئ': 'e', 'ؤ': 'o'
-    };
 
     const cardSizeSelect = document.getElementById('cardSizeSelect');
     const widthInput = document.getElementById('widthInput');
@@ -310,89 +260,6 @@
             heightInput.value = dims[1];
         }
     });
-
-    const sortedTranslationKeys = Object.keys(exactTranslations).sort((a, b) => b.length - a.length);
-
-    function transliterate(text) {
-        let latinText = '';
-        for (let j = 0; j < text.length; j++) {
-            let char = text[j];
-            if (/[\u0600-\u06FF]/.test(char)) {
-                latinText += arabicToLatinMap[char] !== undefined ? arabicToLatinMap[char] : char;
-            } else {
-                latinText += char;
-            }
-        }
-        return latinText;
-    }
-
-    function normalizeAndStripAl(text) {
-        let words = text.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').split(/\s+/);
-        let cleanWords = words.map(w => {
-            if (w.startsWith('ال') && w.length > 3) {
-                return w.substring(2);
-            }
-            return w;
-        });
-        return cleanWords.join(' ');
-    }
-
-    function generateGermanName(arabicName) {
-        if(!arabicName) return "Orientalische Produkte";
-        
-        let brandMatch = arabicName.match(/\(([^)]+)\)/);
-        let brandArabic = brandMatch ? brandMatch[1].trim() : "";
-        let materialArabic = arabicName.replace(/\([^)]+\)/g, '').trim();
-
-        let normMaterial = normalizeAndStripAl(materialArabic);
-        let translatedMaterialWords = [];
-        
-        let words = normMaterial.split(/\s+/);
-        for(let i=0; i<words.length; i++) {
-            let w = words[i];
-            
-            if(i < words.length - 1) {
-                let pair = w + ' ' + words[i+1];
-                let foundPair = false;
-                for (let key of sortedTranslationKeys) {
-                    if (normalizeAndStripAl(key) === pair) {
-                        translatedMaterialWords.push(exactTranslations[key]);
-                        i++;
-                        foundPair = true;
-                        break;
-                    }
-                }
-                if(foundPair) continue;
-            }
-
-            let found = false;
-            for (let key of sortedTranslationKeys) {
-                if (normalizeAndStripAl(key) === w) {
-                    translatedMaterialWords.push(exactTranslations[key]);
-                    found = true;
-                    break;
-                }
-            }
-        }
-
-        let finalMaterial = translatedMaterialWords.join(' ').trim();
-        
-        if (!finalMaterial) {
-            finalMaterial = "Orientalische Produkte";
-        }
-
-        let finalBrand = brandArabic ? transliterate(brandArabic) : "";
-
-        let result = finalMaterial;
-        if (finalBrand) {
-            result = result === "Orientalische Produkte" ? `(${finalBrand})` : `${result} (${finalBrand})`;
-        }
-        
-        result = result.replace(/\s+/g, ' ').trim();
-        let formattedResult = result.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        return formattedResult;
-    }
 
     const excelFileInput = document.getElementById('excelFile');
     const generateBtn = document.getElementById('generateBtn');
@@ -588,8 +455,7 @@
         const a4_w = 210; 
         const a4_h = 297; 
         const pageMargin = 5; 
-        // تم تصفير الفراغ (gap) لتكون البطاقات متلاصقة لتسهيل القص المشترك
-        const gap = 0; 
+        const gap = 0; // متلاصقة للقص المشترك
         
         const tw_cm = parseFloat(widthInput.value) || 7;
         const th_cm = parseFloat(heightInput.value) || 4.5;
@@ -615,7 +481,6 @@
             document.head.appendChild(styleEl);
         }
 
-        // تم تعيين إطار صلب للشبكة ليتداخل ولا يشكل خطين مزعجين، بل خط أسود واحد لقص سريع
         styleEl.innerHTML = `
             @media print {
                 @page { size: A4 portrait; margin: 0; }
@@ -627,7 +492,7 @@
                     display: grid;
                     grid-template-columns: repeat(${cols}, ${tw}mm);
                     grid-template-rows: repeat(${rows}, ${th}mm);
-                    gap: 0mm; /* متلاصقة تماماً */
+                    gap: 0mm; 
                     page-break-after: always;
                     break-after: page;
                     align-content: start;
@@ -642,7 +507,7 @@
                     height: ${th}mm;
                     box-sizing: border-box;
                     overflow: hidden;
-                    border: 1px solid #000000; /* إطار أسود يعمل كدليل للقص */
+                    border: 1px solid #000000;
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
@@ -664,12 +529,13 @@
             }
 
             let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || '';
+            // الاعتماد المباشر على عامود DE Name
+            let latinName = row['DE Name'] || row['de name'] || row['الاسم (ألماني/لاتيني)'] || row['Translated'] || '';
+            
             let weightRaw = row['Beschreibung'] || row['الوزن'] || row['Unnamed: 4'] || '';
             let barcode = row['Barcode'] || row['الباركود'] || row['barcode'] || '';
             let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
             let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
-            
-            let latinName = row['الاسم (ألماني/لاتيني)'] || generateGermanName(arabicName);
 
             const weight = formatWeight(weightRaw);
             const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim().toLowerCase() !== "nan";
