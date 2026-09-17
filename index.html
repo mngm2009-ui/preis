@@ -2,14 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - التصدير المباشر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مولد ملصقات نجوم ماركت - الموثوق</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
-    <!-- مكتبة توليد الـ PDF المباشر (تمنع تخريب المتصفح للمقاسات) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
@@ -118,14 +116,13 @@
         }
 
         .info-box {
-            background: #fff3cd;
-            color: #856404;
+            background: #e0f2fe;
+            color: #0369a1;
             padding: 12px;
             border-radius: 8px;
             font-size: 13px;
             margin-bottom: 20px;
             line-height: 1.6;
-            border: 1px solid #ffeeba;
         }
 
         #selectionContainer {
@@ -171,25 +168,32 @@
             font-weight: normal;
         }
 
-        /* هذا القسم مخفي عن المستخدم وسنستخدمه لتوليد الـ PDF بالخلفية */
-        #printArea { 
-            position: absolute; 
-            left: -9999px; 
-            top: 0; 
-            background: #fff; 
-            direction: rtl;
+        /* إخفاء منطقة الطباعة في الشاشة العادية */
+        @media screen {
+            #printArea { display: none; }
+        }
+
+        /* إعدادات الطباعة الأساسية القوية */
+        @media print {
+            .no-print { display: none !important; }
+            #printArea { display: block !important; }
+            body, html {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>مولد ملصقات نجوم ماركت (تصدير PDF المباشر)</h1>
+<div class="container no-print">
+    <h1>مولد ملصقات نجوم ماركت (المستقر والسريع)</h1>
     
     <div class="info-box">
-        <strong>وداعاً لمشاكل المقاسات:</strong><br>
-        1. الكود الآن يولد لك ملف <strong>PDF</strong> ويحمله مباشرة لجهازك دون المرور بشاشة الطباعة الخاصة بالمتصفح.<br>
-        2. عند اختيارك (رول زيبرا 15×6)، سيتم دمج بطاقتين كل واحدة بمقاس (7.5 × 4 سم) وتوسيطهما بداخل الرول تماماً!
+        <strong>تم حل مشكلة الجوال:</strong><br>
+        1. تم إلغاء المكتبة التي تسبب انهيار الذاكرة والملفات الفارغة.<br>
+        2. تمت إضافة كود سري يخفي الروابط والتواريخ من الآيفون تلقائياً، ليطبع المقاس بدقة 100% دون أن يصغر البطاقة.
     </div>
 
     <div class="form-group">
@@ -199,7 +203,7 @@
 
     <div class="dimensions-grid" style="grid-template-columns: 1fr; margin-bottom: 15px;">
         <div class="form-group">
-            <label>نوع التصدير (PDF):</label>
+            <label>نوع التصدير:</label>
             <select id="printModeSelect" style="border-color: var(--primary); font-weight: bold; color: var(--primary);">
                 <option value="zebra_roll" selected>رول زيبرا المزدوج (15 سم عرض × 6 سم ارتفاع - بطاقتين بجانب بعض)</option>
                 <option value="zebra">طابعة زيبرا مفردة (ملصق واحد لكل صفحة)</option>
@@ -241,10 +245,9 @@
         <div id="productList"></div>
     </div>
 
-    <button class="btn" id="generateBtn" disabled>تحميل ملف الـ PDF 📥</button>
+    <button class="btn" id="generateBtn" disabled>إنشاء وطباعة 🖨️</button>
 </div>
 
-<!-- حاوية بناء الـ PDF الخفية -->
 <div id="printArea"></div>
 
 <script>
@@ -255,7 +258,6 @@
     const heightInput = document.getElementById('heightInput');
     const printModeSelect = document.getElementById('printModeSelect');
 
-    // الضبط التلقائي للمقاسات بناءً على اختيار نوع الطباعة
     printModeSelect.addEventListener('change', (e) => {
         if (e.target.value === 'zebra_roll') {
             cardSizeSelect.value = "7.5,4";
@@ -444,116 +446,192 @@
         return '';
     }
 
-    // توليد PDF المباشر عند النقر
     generateBtn.addEventListener('click', () => {
         const checkedBoxes = document.querySelectorAll('.product-cb:checked');
         const selectedData = Array.from(checkedBoxes).map(cb => parsedExcelData[cb.value]);
 
         if (selectedData.length === 0) {
-            alert('الرجاء تحديد منتج واحد على الأقل!');
+            alert('الرجاء تحديد منتج واحد على الأقل للطباعة!');
             return;
         }
-
-        // تغيير شكل الزر لإعلام المستخدم ببدء المعالجة
-        generateBtn.innerText = '⏳ جاري المعالجة وتجهيز الـ PDF...';
-        generateBtn.disabled = true;
 
         const printMode = printModeSelect.value;
         const tw_cm = parseFloat(widthInput.value) || 7;
         const th_cm = parseFloat(heightInput.value) || 4.5;
-        const tw = tw_cm * 10; // العرض بالمليمتر
-        const th = th_cm * 10; // الارتفاع بالمليمتر
-        
+        const tw = tw_cm * 10; 
+        const th = th_cm * 10; 
         const fontScale = Math.min(tw_cm / 7, th_cm / 4.5);
-        const printArea = document.getElementById('printArea');
-        printArea.innerHTML = '';
 
-        let pdfFormat, pdfOrientation;
-        let ticketsPerPage;
-
-        if (printMode === 'a4') {
-            pdfFormat = 'a4';
-            pdfOrientation = 'portrait';
-            const cols = Math.floor(200 / tw) || 1;
-            const rows = Math.floor(287 / th) || 1;
-            ticketsPerPage = cols * rows;
-
-            selectedData.forEach((row, index) => {
-                let pageDiv;
-                if (index % ticketsPerPage === 0) {
-                    pageDiv = document.createElement('div');
-                    pageDiv.className = 'print-page';
-                    // إعدادات الـ A4
-                    pageDiv.style.width = '210mm';
-                    pageDiv.style.height = '297mm';
-                    pageDiv.style.padding = '5mm';
-                    pageDiv.style.boxSizing = 'border-box';
-                    pageDiv.style.display = 'grid';
-                    pageDiv.style.gridTemplateColumns = `repeat(${cols}, ${tw}mm)`;
-                    pageDiv.style.gridTemplateRows = `repeat(${rows}, ${th}mm)`;
-                    pageDiv.style.alignContent = 'start';
-                    printArea.appendChild(pageDiv);
-                } else {
-                    pageDiv = printArea.lastChild;
-                }
-                pageDiv.appendChild(createTicketHTML(row, tw, th, fontScale, index, 'border: 1px solid #000;'));
-            });
-
-        } else if (printMode === 'zebra_roll') {
-            // رول زيبرا 15 × 6 سم
-            pdfFormat = [150, 60]; 
-            pdfOrientation = 'landscape';
-            ticketsPerPage = 2; // بطاقتين بالعرض
-
-            selectedData.forEach((row, index) => {
-                let pageDiv;
-                if (index % ticketsPerPage === 0) {
-                    pageDiv = document.createElement('div');
-                    pageDiv.className = 'print-page';
-                    // الحاوية الكلية للصفحة 150 عرض و 60 طول
-                    pageDiv.style.width = '150mm';
-                    pageDiv.style.height = '60mm';
-                    pageDiv.style.display = 'flex';
-                    pageDiv.style.flexDirection = 'row';
-                    // توسيط البطاقات عمودياً داخل الـ 60 ملم (بما أن البطاقة ارتفاعها 40 ملم فقط)
-                    pageDiv.style.alignItems = 'center'; 
-                    pageDiv.style.justifyContent = 'flex-start';
-                    pageDiv.style.boxSizing = 'border-box';
-                    printArea.appendChild(pageDiv);
-                } else {
-                    pageDiv = printArea.lastChild;
-                }
-                
-                // إضافة خط وهمي في المنتصف للبطاقة الثانية فقط
-                let borderStyle = (index % 2 === 1) ? 'border-right: 1px dashed #999;' : '';
-                pageDiv.appendChild(createTicketHTML(row, tw, th, fontScale, index, borderStyle));
-            });
-
-        } else {
-            // زيبرا مفرد
-            pdfFormat = [tw, th];
-            pdfOrientation = tw > th ? 'landscape' : 'portrait';
-            ticketsPerPage = 1;
-
-            selectedData.forEach((row, index) => {
-                let pageDiv = document.createElement('div');
-                pageDiv.className = 'print-page';
-                pageDiv.style.width = `${tw}mm`;
-                pageDiv.style.height = `${th}mm`;
-                pageDiv.style.display = 'flex';
-                pageDiv.style.boxSizing = 'border-box';
-                printArea.appendChild(pageDiv);
-                
-                pageDiv.appendChild(createTicketHTML(row, tw, th, fontScale, index, ''));
-            });
+        const styleId = "dynamic-print-style";
+        let styleEl = document.getElementById(styleId);
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = styleId;
+            document.head.appendChild(styleEl);
         }
 
-        // رسم الباركودات باستخدام مكتبة Canvas لضمان الجودة في الـ PDF
-        setTimeout(() => {
-            selectedData.forEach((row, index) => {
-                let barcode = row['Barcode'] || row['الباركود'] || row['barcode'] || '';
-                if (barcode) {
-                    try {
+        let cssString = '';
+
+        if (printMode === 'a4') {
+            const a4_w = 210; 
+            const a4_h = 297; 
+            const pageMargin = 5; 
+            const usableW = a4_w - (pageMargin * 2);
+            const usableH = a4_h - (pageMargin * 2);
+
+            let cols = Math.floor(usableW / tw) || 1;
+            let rows = Math.floor(usableH / th) || 1;
+            window.ticketsPerPage = cols * rows;
+
+            cssString = `
+                @media print {
+                    @page { size: A4 portrait; margin: 0mm !important; }
+                    body, html { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 0 !important; }
+                    .print-page {
+                        width: 210mm !important; height: 297mm !important;
+                        padding: ${pageMargin}mm !important; box-sizing: border-box !important;
+                        display: grid !important; grid-template-columns: repeat(${cols}, ${tw}mm) !important;
+                        grid-template-rows: repeat(${rows}, ${th}mm) !important; gap: 0mm !important; 
+                        page-break-after: always !important; break-after: page !important;
+                        align-content: start !important; justify-content: start !important;
+                    }
+                    .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
+                    .ticket-box {
+                        width: ${tw}mm !important; height: ${th}mm !important;
+                        min-width: ${tw}mm !important; max-width: ${tw}mm !important;
+                        min-height: ${th}mm !important; max-height: ${th}mm !important;
+                        box-sizing: border-box !important; overflow: hidden !important;
+                        border: 1px solid #000000 !important; display: flex !important;
+                        flex-direction: column !important; justify-content: space-between !important;
+                        padding: ${3 * fontScale}mm ${4 * fontScale}mm !important; background: #fff !important;
+                    }
+                }
+            `;
+        } else if (printMode === 'zebra_roll') {
+            // الرول المزدوج: 150 عرض و 60 طول
+            window.ticketsPerPage = 2;
+            const rollW = 150; 
+            const rollH = 60; 
+
+            cssString = `
+                @media print {
+                    @page { size: ${rollW}mm ${rollH}mm; margin: 0mm !important; } /* هذا السطر يمنع الآيفون من طباعة التواريخ والروابط */
+                    body, html { width: ${rollW}mm !important; height: ${rollH}mm !important; margin: 0 !important; padding: 0 !important; }
+                    .print-page {
+                        width: ${rollW}mm !important; height: ${rollH}mm !important;
+                        box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
+                        display: flex !important; flex-direction: row !important;
+                        align-items: center !important; justify-content: flex-start !important;
+                        page-break-after: always !important; break-after: page !important;
+                    }
+                    .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
+                    .ticket-box {
+                        width: ${tw}mm !important; height: ${th}mm !important;
+                        min-width: ${tw}mm !important; max-width: ${tw}mm !important;
+                        min-height: ${th}mm !important; max-height: ${th}mm !important;
+                        box-sizing: border-box !important; overflow: hidden !important;
+                        border: none !important; border-left: 1px dashed #000 !important;
+                        display: flex !important; flex-direction: column !important;
+                        justify-content: space-between !important;
+                        padding: ${3 * fontScale}mm ${4 * fontScale}mm !important; background: #fff !important;
+                    }
+                    .ticket-box:last-child { border-left: none !important; }
+                }
+            `;
+        } else {
+            // زيبرا مفرد
+            window.ticketsPerPage = 1;
+            cssString = `
+                @media print {
+                    @page { size: ${tw}mm ${th}mm; margin: 0mm !important; }
+                    body, html { width: ${tw}mm !important; height: ${th}mm !important; margin: 0 !important; padding: 0 !important; }
+                    .print-page {
+                        width: ${tw}mm !important; height: ${th}mm !important;
+                        box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
+                        display: block !important; page-break-after: always !important; break-after: page !important;
+                    }
+                    .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
+                    .ticket-box {
+                        width: ${tw}mm !important; height: ${th}mm !important;
+                        min-width: ${tw}mm !important; max-width: ${tw}mm !important;
+                        min-height: ${th}mm !important; max-height: ${th}mm !important;
+                        box-sizing: border-box !important; overflow: hidden !important;
+                        border: none !important; display: flex !important;
+                        flex-direction: column !important; justify-content: space-between !important;
+                        padding: ${3 * fontScale}mm ${4 * fontScale}mm !important; background: #fff !important;
+                    }
+                }
+            `;
+        }
+
+        styleEl.innerHTML = cssString;
+
+        const printArea = document.getElementById('printArea');
+        printArea.innerHTML = '';
+        let currentPage = null;
+
+        selectedData.forEach((row, index) => {
+            if (index % window.ticketsPerPage === 0) {
+                currentPage = document.createElement('div');
+                currentPage.className = 'print-page';
+                printArea.appendChild(currentPage);
+            }
+
+            let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || '';
+            let latinName = row['DE Name'] || row['de name'] || row['الاسم (ألماني/لاتيني)'] || row['Translated'] || '';
+            let weightRaw = row['Beschreibung'] || row['الوزن'] || row['Unnamed: 4'] || '';
+            let barcode = row['Barcode'] || row['الباركود'] || row['barcode'] || '';
+            let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
+            let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
+
+            const weight = formatWeight(weightRaw);
+            const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim().toLowerCase() !== "nan";
+            const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
+            
+            const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
+            const oldPriceNum = hasOffer ? cleanPriceVal(basePriceRaw) : '';
+            const grundpreisText = calculateGrundpreis(mainPriceNum, weight);
+
+            const ticketDiv = document.createElement('div');
+            ticketDiv.className = 'ticket-box';
+
+            let contentHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${3 * fontScale}px;">
+                    <div style="font-weight: bold; color: #111; text-align: left; max-width: 65%;">
+                        <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${13 * fontScale}px; line-height: 1.1;">${arabicName}</div>
+                        <div style="font-weight: bold; font-size: ${12 * fontScale}px; direction: ltr; text-align: left; line-height: 1.1; margin-top: 2px;">${latinName}</div>
+                        <div style="font-size: ${11 * fontScale}px; color: #333; font-weight: bold; direction: ltr; text-align: left; margin-top: 2px;">${weight}</div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
+                            Nogoom Markt
+                        </div>
+                        ${grundpreisText ? `<div style="font-size: ${9 * fontScale}px; color: #475569; font-weight: bold; direction: ltr; white-space: nowrap;">${grundpreisText}</div>` : ''}
+                    </div>
+                </div>
+
+                <div style="position: relative; background-color: ${boxBgColor} !important; color: #ffffff !important; padding: 0; display: flex; justify-content: center; align-items: center; border-radius: 4px; flex: 0 0 calc(48px * ${fontScale}); height: calc(48px * ${fontScale}); overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                    ${oldPriceNum ? `<div style="position: absolute; left: ${8 * fontScale}px; font-size: ${16 * fontScale}px; text-decoration: line-through; color: #fca5a5; font-weight: bold;" dir="ltr">${oldPriceNum} €</div>` : ''}
+                    
+                    <div style="font-size: ${48 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff !important;" dir="ltr">
+                        ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${28 * fontScale}px; color: #ffffff !important;">€</span>` : ''}
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: center; align-items: center; flex: 0 0 auto; margin-top: ${3 * fontScale}px; height: ${24 * fontScale}px; overflow: hidden;">
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center; height: 100%;">
+                        <svg id="barcode-${index}" style="max-height: 100%; max-width: 100%; object-fit: contain;"></svg>
+                    </div>
+                </div>
+            `;
+            
+            ticketDiv.innerHTML = contentHTML;
+            currentPage.appendChild(ticketDiv);
+
+            setTimeout(() => {
+                try {
+                    if (barcode) {
                         JsBarcode(`#barcode-${index}`, String(barcode), {
                             format: "CODE128",
                             displayValue: true,
@@ -561,92 +639,15 @@
                             height: 20 * fontScale,
                             margin: 0
                         });
-                    } catch (e) {}
-                }
-            });
+                    }
+                } catch (err) {}
+            }, 100);
+        });
 
-            // إعدادات مكتبة html2pdf لتوليد الملف
-            const opt = {
-                margin:       0,
-                filename:     `Nogoom_Labels_${new Date().getTime()}.pdf`,
-                image:        { type: 'jpeg', quality: 1 },
-                // scale 4 يضمن جودة عالية جداً وخالية من البكسلة للطباعة
-                html2canvas:  { scale: 4, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: pdfFormat, orientation: pdfOrientation }
-            };
-
-            // توليد وحفظ الـ PDF
-            html2pdf().set(opt).from(printArea).save().then(() => {
-                generateBtn.innerText = 'تحميل ملف الـ PDF 📥';
-                generateBtn.disabled = false;
-                printArea.innerHTML = ''; // تنظيف الحاوية
-            });
-
-        }, 500); // مهلة صغيرة للتأكد من رسم الباركود والخطوط
+        setTimeout(() => {
+            window.print();
+        }, 800);
     });
-
-    // دالة مساعدة لإنشاء HTML البطاقة بشكل مستقل
-    function createTicketHTML(row, tw, th, fontScale, index, borderStyle) {
-        let arabicName = row['Produkt'] || row['الاسم (عربي)'] || row['الاسم'] || row['name'] || '';
-        let latinName = row['DE Name'] || row['de name'] || row['الاسم (ألماني/لاتيني)'] || row['Translated'] || '';
-        let weightRaw = row['Beschreibung'] || row['الوزن'] || row['Unnamed: 4'] || '';
-        let basePriceRaw = row['Preis'] || row['السعر الأساسي'] || row['السعر'] || row['price'] || '';
-        let offerPriceRaw = row['سعر العرض'] || row['Offer Price'] || row['Angebotspreis'] || row['offer'] || '';
-
-        const weight = formatWeight(weightRaw);
-        const hasOffer = offerPriceRaw !== undefined && offerPriceRaw !== null && String(offerPriceRaw).trim() !== "" && String(offerPriceRaw).trim().toLowerCase() !== "nan";
-        const boxBgColor = hasOffer ? '#7f1d1d' : '#1e293b'; 
-        
-        const mainPriceNum = hasOffer ? cleanPriceVal(offerPriceRaw) : cleanPriceVal(basePriceRaw);
-        const oldPriceNum = hasOffer ? cleanPriceVal(basePriceRaw) : '';
-        const grundpreisText = calculateGrundpreis(mainPriceNum, weight);
-
-        const ticketDiv = document.createElement('div');
-        // التحكم الصارم بأبعاد البطاقة بالمليمتر
-        ticketDiv.style.width = `${tw}mm`;
-        ticketDiv.style.height = `${th}mm`;
-        ticketDiv.style.minWidth = `${tw}mm`;
-        ticketDiv.style.minHeight = `${th}mm`;
-        ticketDiv.style.boxSizing = 'border-box';
-        ticketDiv.style.overflow = 'hidden';
-        ticketDiv.style.display = 'flex';
-        ticketDiv.style.flexDirection = 'column';
-        ticketDiv.style.justifyContent = 'space-between';
-        ticketDiv.style.padding = `${3 * fontScale}mm ${4 * fontScale}mm`;
-        ticketDiv.style.background = '#ffffff';
-        if(borderStyle) ticketDiv.style.cssText += borderStyle;
-
-        ticketDiv.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex: 1; overflow: hidden; margin-bottom: ${3 * fontScale}px;">
-                <div style="font-weight: bold; color: #111; text-align: left; max-width: 65%;">
-                    <div style="color: #111; direction: rtl; text-align: right; font-weight: bold; font-size: ${13 * fontScale}px; line-height: 1.1;">${arabicName}</div>
-                    <div style="font-weight: bold; font-size: ${12 * fontScale}px; direction: ltr; text-align: left; line-height: 1.1; margin-top: 2px;">${latinName}</div>
-                    <div style="font-size: ${11 * fontScale}px; color: #333; font-weight: bold; direction: ltr; text-align: left; margin-top: 2px;">${weight}</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                    <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: ${2 * fontScale}px ${4 * fontScale}px; font-size: ${8 * fontScale}px; font-weight: bold; color: #334155; white-space: nowrap;">
-                        Nogoom Markt
-                    </div>
-                    ${grundpreisText ? `<div style="font-size: ${9 * fontScale}px; color: #475569; font-weight: bold; direction: ltr; white-space: nowrap;">${grundpreisText}</div>` : ''}
-                </div>
-            </div>
-
-            <div style="position: relative; background-color: ${boxBgColor}; color: #ffffff; padding: 0; display: flex; justify-content: center; align-items: center; border-radius: 4px; flex: 0 0 calc(48px * ${fontScale}); height: calc(48px * ${fontScale}); overflow: hidden;">
-                ${oldPriceNum ? `<div style="position: absolute; left: ${8 * fontScale}px; font-size: ${16 * fontScale}px; text-decoration: line-through; color: #fca5a5; font-weight: bold;" dir="ltr">${oldPriceNum} €</div>` : ''}
-                <div style="font-size: ${48 * fontScale}px; font-weight: bold; letter-spacing: -1px; line-height: 1; color: #ffffff;" dir="ltr">
-                    ${mainPriceNum ? `${mainPriceNum} <span style="font-size:${28 * fontScale}px; color: #ffffff;">€</span>` : ''}
-                </div>
-            </div>
-
-            <div style="display: flex; justify-content: center; align-items: center; flex: 0 0 auto; margin-top: ${3 * fontScale}px; height: ${24 * fontScale}px; overflow: hidden;">
-                <div style="width: 100%; display: flex; justify-content: center; align-items: center; height: 100%;">
-                    <!-- استخدام عنصر canvas لضمان طباعته بوضوح في الـ PDF -->
-                    <canvas id="barcode-${index}" style="max-height: 100%; max-width: 100%; object-fit: contain;"></canvas>
-                </div>
-            </div>
-        `;
-        return ticketDiv;
-    }
 </script>
 
 </body>
