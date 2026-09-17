@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد ملصقات نجوم ماركت - نظام زيبرا المزدوج</title>
+    <title>مولد ملصقات نجوم ماركت - زيبرا الأفقي</title>
     <!-- مكتبة قراءة الإكسل و CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- مكتبة توليد الباركود JsBarcode -->
@@ -73,7 +73,7 @@
 
         .dimensions-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
         }
         
@@ -195,11 +195,11 @@
 <body>
 
 <div class="container no-print">
-    <h1>مولد ملصقات نجوم ماركت (تحديث رول زيبرا المزدوج)</h1>
+    <h1>مولد ملصقات نجوم ماركت (تحديث زيبرا الأفقي)</h1>
     
     <div class="info-box">
-        <strong>خيارات زيبرا المتطورة:</strong><br>
-        أضفنا خياراً ثالثاً يقوم بتوليد صفحة طولية (مثلاً 6×15 سم) تضع فيها بطاقتين متلاصقتين عمودياً، مع خط متقطع بينهما لسهولة القص.
+        <strong>خيار الرول الأفقي الجديد:</strong><br>
+        عند اختيار (رول زيبرا مزدوج)، سيتم وضع بطاقتين جنباً إلى جنب. الارتفاع سيكون <strong>4 سم فقط</strong>، والعرض الكلي للرول 15 سم (كل بطاقة 7.5 سم).
     </div>
 
     <div class="form-group">
@@ -213,7 +213,7 @@
             <select id="printModeSelect" style="border-color: var(--primary); font-weight: bold; color: var(--primary);">
                 <option value="a4" selected>ورق A4 (مجموعة ملصقات متلاصقة للقص)</option>
                 <option value="zebra">طابعة زيبرا (ملصق واحد لكل صفحة PDF)</option>
-                <option value="zebra_roll">طابعة زيبرا (رول 6×15 سم - بطاقتين بالطول)</option>
+                <option value="zebra_roll">طابعة زيبرا (رول 15×4 سم - بطاقتين بالعرض)</option>
             </select>
         </div>
     </div>
@@ -223,7 +223,7 @@
             <label>مقاس البطاقة الواحدة:</label>
             <select id="cardSizeSelect">
                 <option value="7,4.5" selected>الأساسي (7 × 4.5 سم)</option>
-                <option value="6,7.5">نصف رول زيبرا (6 × 7.5 سم)</option>
+                <option value="7.5,4">نصف رول زيبرا (7.5 × 4 سم)</option>
                 <option value="19,13.5">مقاس A5</option>
                 <option value="9.5,13.5">مقاس A6</option>
                 <option value="custom">مقاس مخصص</option>
@@ -266,12 +266,12 @@
     const heightInput = document.getElementById('heightInput');
     const printModeSelect = document.getElementById('printModeSelect');
 
-    // عندما يتغير نوع الطباعة
+    // تغيير المقاسات أوتوماتيكياً عند اختيار نوع الطباعة
     printModeSelect.addEventListener('change', (e) => {
         if (e.target.value === 'zebra_roll') {
-            cardSizeSelect.value = "6,7.5";
-            widthInput.value = 6;
-            heightInput.value = 7.5; // ارتفاع البطاقتين 15، فالبطاقة الواحدة 7.5
+            cardSizeSelect.value = "7.5,4";
+            widthInput.value = 7.5;
+            heightInput.value = 4; // الارتفاع لا يتجاوز 4 سم
         } else if (e.target.value === 'a4' || e.target.value === 'zebra') {
             cardSizeSelect.value = "7,4.5";
             widthInput.value = 7;
@@ -483,6 +483,7 @@
         const th_cm = parseFloat(heightInput.value) || 4.5;
         const tw = tw_cm * 10; 
         const th = th_cm * 10; 
+        // المقياس الديناميكي للخطوط ليناسب ارتفاع 4 سم
         const fontScale = Math.min(tw_cm / 7, th_cm / 4.5);
 
         const styleId = "dynamic-print-style";
@@ -532,9 +533,9 @@
                 }
             `;
         } else if (printMode === 'zebra_roll') {
-            window.ticketsPerPage = 2; // بطاقتين بالطول
-            const rollW = tw; 
-            const rollH = th * 2; // الارتفاع الكلي للرول يساوي ارتفاع بطاقتين
+            window.ticketsPerPage = 2; // بطاقتين بالعرض
+            const rollW = tw * 2; // العرض الكلي للرول يساوي عرض بطاقتين (15 سم)
+            const rollH = th; // الارتفاع 4 سم فقط
 
             cssString = `
                 @media print {
@@ -543,23 +544,22 @@
                     .print-page {
                         width: ${rollW}mm !important; height: ${rollH}mm !important;
                         box-sizing: border-box !important; margin: 0 !important; padding: 0 !important;
-                        display: flex !important; flex-direction: column !important;
+                        display: flex !important; flex-direction: row !important; /* ترتيب أفقي */
                         page-break-after: always !important; break-after: page !important;
                     }
                     .print-page:last-child { page-break-after: auto !important; break-after: auto !important; }
                     .ticket-box {
                         width: ${tw}mm !important; height: ${th}mm !important;
                         box-sizing: border-box !important; overflow: hidden !important;
-                        border: none !important; border-bottom: 1px dashed #000 !important; /* خط وهمي للقص بينهما */
+                        border: none !important; border-left: 1px dashed #000 !important; /* خط وهمي للقص بينهما */
                         display: flex !important; flex-direction: column !important;
                         justify-content: space-between !important;
                         padding: ${3 * fontScale}mm ${4 * fontScale}mm !important; background: #fff !important;
                     }
-                    .ticket-box:last-child { border-bottom: none !important; } /* لا خط في النهاية */
+                    .ticket-box:last-child { border-left: none !important; } /* لا خط في النهاية للملصق الثاني */
                 }
             `;
         } else {
-            // Zebra (بطاقة واحدة بالصفحة)
             window.ticketsPerPage = 1;
 
             cssString = `
